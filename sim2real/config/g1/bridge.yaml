@@ -1,0 +1,162 @@
+render_gui: true
+xml_path: assets/g1.xml
+perturb_force: 300.0
+perturb_duration: 0.2
+perturb_body: torso_link
+max_external_force: 30.0
+
+udp:
+  state_host: 127.0.0.1
+  state_port: 55001
+  cmd_bind_host: 0.0.0.0
+  cmd_port: 55002
+freq:
+  physical_hz: 200
+  state_decimation: 4
+viewer_fps: 30
+mujoco:
+  integrator: implicitfast
+  solver: newton
+  cone: pyramidal
+  jacobian: auto
+  iterations: 10
+  tolerance: 1.0e-8
+  ls_iterations: 20
+  ls_tolerance: 0.01
+  ccd_iterations: 50
+  impratio: 1.0
+
+policy_joint_names:
+- left_hip_pitch_joint
+- right_hip_pitch_joint
+- waist_yaw_joint
+- left_hip_roll_joint
+- right_hip_roll_joint
+- waist_roll_joint
+- left_hip_yaw_joint
+- right_hip_yaw_joint
+- waist_pitch_joint
+- left_knee_joint
+- right_knee_joint
+- left_shoulder_pitch_joint
+- right_shoulder_pitch_joint
+- left_ankle_pitch_joint
+- right_ankle_pitch_joint
+- left_shoulder_roll_joint
+- right_shoulder_roll_joint
+- left_ankle_roll_joint
+- right_ankle_roll_joint
+- left_shoulder_yaw_joint
+- right_shoulder_yaw_joint
+- left_elbow_joint
+- right_elbow_joint
+- left_wrist_roll_joint
+- right_wrist_roll_joint
+- left_wrist_pitch_joint
+- right_wrist_pitch_joint
+- left_wrist_yaw_joint
+- right_wrist_yaw_joint
+mujoco_joint_names:
+- left_hip_pitch_joint
+- left_hip_roll_joint
+- left_hip_yaw_joint
+- left_knee_joint
+- left_ankle_pitch_joint
+- left_ankle_roll_joint
+- right_hip_pitch_joint
+- right_hip_roll_joint
+- right_hip_yaw_joint
+- right_knee_joint
+- right_ankle_pitch_joint
+- right_ankle_roll_joint
+- waist_yaw_joint
+- waist_roll_joint
+- waist_pitch_joint
+- left_shoulder_pitch_joint
+- left_shoulder_roll_joint
+- left_shoulder_yaw_joint
+- left_elbow_joint
+- left_wrist_roll_joint
+- left_wrist_pitch_joint
+- left_wrist_yaw_joint
+- right_shoulder_pitch_joint
+- right_shoulder_roll_joint
+- right_shoulder_yaw_joint
+- right_elbow_joint
+- right_wrist_roll_joint
+- right_wrist_pitch_joint
+- right_wrist_yaw_joint
+
+# Nominal actuator armatures used by the exported grit policy,
+# listed in policy/controller order and applied after loading the XML.
+joint_armatures:
+- 0.01017752004132231
+- 0.01017752004132231
+- 0.01017752004132231
+- 0.025101924999999997
+- 0.025101924999999997
+- 0.00721945
+- 0.01017752004132231
+- 0.01017752004132231
+- 0.00721945
+- 0.025101924999999997
+- 0.025101924999999997
+- 0.003609725
+- 0.003609725
+- 0.00721945
+- 0.00721945
+- 0.003609725
+- 0.003609725
+- 0.00721945
+- 0.00721945
+- 0.003609725
+- 0.003609725
+- 0.003609725
+- 0.003609725
+- 0.003609725
+- 0.003609725
+- 0.00425
+- 0.00425
+- 0.00425
+- 0.00425
+
+# GRIT default keyframe in policy/controller order.
+home_q:
+- -0.312
+- -0.312
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.669
+- 0.669
+- 0.2
+- 0.2
+- -0.363
+- -0.363
+- 0.2
+- -0.2
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.6
+- 0.6
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+root_qpos_home: &root_pose
+- 0.0
+- 0.0
+- 0.76
+- 0.7071067811865476
+- 0.0
+- 0.0
+- 0.7071067811865476
+root_qpos_control: *root_pose

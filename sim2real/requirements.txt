@@ -1,0 +1,11 @@
+linuxfd
+mink>=1.1.0
+mujoco
+numpy
+onnxruntime
+pybind11>=3.0.3
+pyyaml
+pyzmq>=27.1.0
+scipy
+sshkeyboard
+

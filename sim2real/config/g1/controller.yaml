@@ -1,0 +1,133 @@
+control_freq: 50
+udp:
+  state_bind_host: 0.0.0.0
+  state_port: 55001
+  cmd_host: 127.0.0.1
+  cmd_port: 55002
+
+# Controller/actuator order used by the UDP bridge.
+policy_joint_names:
+- left_hip_pitch_joint
+- right_hip_pitch_joint
+- waist_yaw_joint
+- left_hip_roll_joint
+- right_hip_roll_joint
+- waist_roll_joint
+- left_hip_yaw_joint
+- right_hip_yaw_joint
+- waist_pitch_joint
+- left_knee_joint
+- right_knee_joint
+- left_shoulder_pitch_joint
+- right_shoulder_pitch_joint
+- left_ankle_pitch_joint
+- right_ankle_pitch_joint
+- left_shoulder_roll_joint
+- right_shoulder_roll_joint
+- left_ankle_roll_joint
+- right_ankle_roll_joint
+- left_shoulder_yaw_joint
+- right_shoulder_yaw_joint
+- left_elbow_joint
+- right_elbow_joint
+- left_wrist_roll_joint
+- right_wrist_roll_joint
+- left_wrist_pitch_joint
+- right_wrist_pitch_joint
+- left_wrist_yaw_joint
+- right_wrist_yaw_joint
+
+# Nominal actuator gains used by the exported grit policy.
+kps:
+- 40.17923863450712
+- 40.17923863450712
+- 40.17923863450712
+- 99.09842777666111
+- 99.09842777666111
+- 28.50124619574858
+- 40.17923863450712
+- 40.17923863450712
+- 28.50124619574858
+- 99.09842777666111
+- 99.09842777666111
+- 14.25062309787429
+- 14.25062309787429
+- 28.50124619574858
+- 28.50124619574858
+- 14.25062309787429
+- 14.25062309787429
+- 28.50124619574858
+- 28.50124619574858
+- 14.25062309787429
+- 14.25062309787429
+- 14.25062309787429
+- 14.25062309787429
+- 14.25062309787429
+- 14.25062309787429
+- 16.77832748089279
+- 16.77832748089279
+- 16.77832748089279
+- 16.77832748089279
+kds:
+- 2.557889775413375
+- 2.557889775413375
+- 2.557889775413375
+- 6.308801853496639
+- 6.308801853496639
+- 1.814445686584846
+- 2.557889775413375
+- 2.557889775413375
+- 1.814445686584846
+- 6.308801853496639
+- 6.308801853496639
+- 0.907222843292423
+- 0.907222843292423
+- 1.814445686584846
+- 1.814445686584846
+- 0.907222843292423
+- 0.907222843292423
+- 1.814445686584846
+- 1.814445686584846
+- 0.907222843292423
+- 0.907222843292423
+- 0.907222843292423
+- 0.907222843292423
+- 0.907222843292423
+- 0.907222843292423
+- 1.06814150219
+- 1.06814150219
+- 1.06814150219
+- 1.06814150219
+
+# GRIT default keyframe in controller order.
+default_qpos: &knees_bent
+- -0.312
+- -0.312
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.669
+- 0.669
+- 0.2
+- 0.2
+- -0.363
+- -0.363
+- 0.2
+- -0.2
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.6
+- 0.6
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+init_qpos: *knees_bent

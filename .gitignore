@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+build/
+build-*/
+*.log
+sim2real/teleop/deps/

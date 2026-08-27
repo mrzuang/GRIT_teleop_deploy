@@ -1,0 +1,20 @@
+[project]
+name = "grit-deployment-runtime"
+version = "0.1.0"
+description = "GRIT policy inference runtime for Unitree G1 sim2sim and sim2real deployment"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+  "linuxfd",
+  "mink>=1.1.0",
+  "mujoco",
+  "numpy",
+  "onnxruntime",
+  "pybind11>=3.0.3",
+  "pyyaml",
+  "pyzmq>=27.1.0",
+  "scipy",
+  "sshkeyboard",
+]
+
+[tool.uv]
+package = false

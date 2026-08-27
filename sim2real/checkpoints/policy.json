@@ -1,0 +1,65 @@
+{
+  "format_version": 1,
+  "algorithm": "GRIT",
+  "in_keys": [
+    "reference_context",
+    "proprio_history"
+  ],
+  "inputs": {
+    "reference_context": {
+      "shape": [
+        "batch",
+        9,
+        70
+      ],
+      "model_fps": 30.0,
+      "reference_fps": 50.0,
+      "reference_frame_offsets": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        8,
+        10,
+        12,
+        13
+      ],
+      "frame_layout": [
+        "joint_pos[29]",
+        "joint_vel[29]",
+        "root_rotation_6d[6]",
+        "root_linear_velocity_body[3]",
+        "root_angular_velocity_body[3]"
+      ]
+    },
+    "proprio_history": {
+      "shape": [
+        "batch",
+        990
+      ],
+      "layout": "term-major, each term oldest-to-newest",
+      "terms": [
+        "base_angular_velocity[10,3]",
+        "projected_gravity[10,3]",
+        "reference_root_orientation_body[10,6]",
+        "joint_position_offset[10,29]",
+        "joint_velocity[10,29]",
+        "previous_action[10,29]"
+      ]
+    }
+  },
+  "out_keys": [
+    "actions"
+  ],
+  "output": {
+    "actions": {
+      "shape": [
+        "batch",
+        29
+      ]
+    }
+  },
+  "deployment_input_dim": 1620,
+  "onnx_sha256": "1f71c3d725d4d120160cdfd75e50b7da4eab2bd3b7876d7cb754d88b43b58082"
+}
