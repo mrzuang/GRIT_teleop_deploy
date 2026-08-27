@@ -107,6 +107,8 @@ uv run src/deploy.py \
 
 ## PICO 环境配置
 
+未配置过PICO软件的，请先按照该文档配置：[PICO 硬件、XRoboToolkit 安装、标定与网络配置指南](docs/pico_setup_zh.md)
+
 先将 XRoboToolkit PC Service 安装到 `/opt/apps/roboticsservice`，然后把
 Python 绑定安装到 GRIT 环境中：
 
