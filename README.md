@@ -109,6 +109,8 @@ uv run src/deploy.py \
 
 ## PICO setup
 
+[PICO hardware, XRoboToolkit, calibration, and network setup guide](docs/pico_setup.md)
+
 Install the XRoboToolkit PC service at `/opt/apps/roboticsservice`, then install
 its Python binding into the GRIT environment:
 

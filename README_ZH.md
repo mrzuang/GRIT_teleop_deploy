@@ -2,17 +2,15 @@
 
 [English](README.md)
 
-GRIT 是面向 29 自由度 Unitree G1 全身动作跟踪策略的部署运行时。同一个
-GRIT 推理进程通过统一的 UDP 接口，既可以控制 MuJoCo 仿真机器人，也可以
-控制真实机器人。
+本仓库是面向GRIT算法的Unitree G1 摇操部署代码。策略推理进程通过统一的 UDP 接口，使用PICO即可实现机器人的全身摇操运动控制跟踪。
 
 本仓库包含：
 
-- GRIT ONNX 策略及其部署契约
-- 50 Hz Python 推理与控制运行时
+- GRIT ONNX 策略及其配置文件
+- 50 Hz Python 推理与控制环路
 - 支持无界面和交互界面的 MuJoCo sim2sim
 - 基于 PICO/XRoboToolkit 的实时动作重定向
-- 基于 Unitree SDK2 的原生硬件桥接器，包含指令超时阻尼保护
+- 基于 Unitree SDK2 的原生硬件桥接，包含指令超时阻尼保护
 
 训练和数据生成代码不在本部署仓库的范围内。
 
@@ -21,7 +19,7 @@ GRIT 推理进程通过统一的 UDP 接口，既可以控制 MuJoCo 仿真机�
 ```text
 .
 ├── sim2real/
-│   ├── checkpoints/                 # GRIT ONNX 模型及运行时契约
+│   ├── checkpoints/                 # GRIT ONNX 模型及配置文件
 │   ├── config/g1/
 │   │   ├── motions/                 # 示例参考动作
 │   │   ├── tracking.yaml            # 本地参考动作模式
@@ -48,7 +46,7 @@ GRIT 推理进程通过统一的 UDP 接口，既可以控制 MuJoCo 仿真机�
 - CMake 3.16+、支持 C++17 的编译器、`make` 和 `flock`
 - 运行交互式仿真所需的 MuJoCo 图形环境
 - 使用 PICO 时需要 XRoboToolkit、ADB 和 Python SDK
-- 真机部署需要 Unitree G1 和独立的机器人侧网络接口
+- 真机部署需要 Unitree G1 和本地电脑通过网线连接
 
 在仓库根目录安装 Python 环境：
 
@@ -137,6 +135,8 @@ taskset -c 1 uv run teleop/serve_xrobot_teleop.py --robot g1
 
 实时链路使用 TCP 端口 `28701`、`28702` 和 `28703`。
 
+
+
 ## PICO sim2sim
 
 依次启动以下进程：
@@ -173,7 +173,7 @@ taskset -c 4-7 uv run src/deploy.py \
 ## G1 真机部署
 
 必须先在 MuJoCo 中验证完全相同的模型、配置和 PICO 控制流程。首次使用时
-编译原生桥接器：
+编译原生桥接：
 
 ```bash
 cd g1_sim2real
@@ -208,7 +208,7 @@ taskset -c 4-7 uv run src/deploy.py \
 只有在 GRIT 进程报告已收到有效机器人状态后，才能按 `s`。解除物理支撑
 前，必须检查关节顺序、控制增益、默认姿态、网络接口和模型哈希。
 
-原生桥接器收到有效 Python 指令前，不会释放 Unitree 运动服务的控制权。
+原生桥接收到有效 Python 指令前，不会释放 Unitree 运动服务的控制权。
 完成控制权交接后，如果指令流丢失或超时，桥接器默认在 `0.2 s` 后切换到
 持续阻尼模式。该看门狗不能替代物理急停和经过验证的故障恢复流程。
 
@@ -238,7 +238,7 @@ ONNX 计算图必须提供完全一致的接口：
 
 ## 验证
 
-运行 GRIT 部署契约测试：
+运行 GRIT 部署测试：
 
 ```bash
 cd sim2real
