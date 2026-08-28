@@ -15,6 +15,8 @@ server:
   rep_bind_addr: tcp://*:28702
   ctrl_bind_addr: tcp://*:28703
   ctrl_fps: 50
+  vis_fps: 5
   lookback_ms: 50.0
   retarget_buffer_window_s: 0.5
   log_interval_s: 1.0
+  visualize: true

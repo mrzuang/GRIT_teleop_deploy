@@ -98,9 +98,11 @@ class TeleopRobotConfig:
     rep_bind_addr: str
     ctrl_bind_addr: str
     ctrl_fps: int
+    vis_fps: int
     lookback_ms: float
     retarget_buffer_window_s: float
     log_interval_s: float
+    visualize: bool
 
     @property
     def dof_count(self) -> int:
@@ -159,9 +161,11 @@ def load_teleop_robot_config(robot: str) -> TeleopRobotConfig:
             "rep_bind_addr",
             "ctrl_bind_addr",
             "ctrl_fps",
+            "vis_fps",
             "lookback_ms",
             "retarget_buffer_window_s",
             "log_interval_s",
+            "visualize",
         ),
         "server",
     )
@@ -213,9 +217,11 @@ def load_teleop_robot_config(robot: str) -> TeleopRobotConfig:
         rep_bind_addr=str(server["rep_bind_addr"]).strip(),
         ctrl_bind_addr=str(server["ctrl_bind_addr"]).strip(),
         ctrl_fps=int(server["ctrl_fps"]),
+        vis_fps=int(server["vis_fps"]),
         lookback_ms=float(server["lookback_ms"]),
         retarget_buffer_window_s=float(server["retarget_buffer_window_s"]),
         log_interval_s=float(server["log_interval_s"]),
+        visualize=bool(server["visualize"]),
     )
 
     if cfg.robot_key != robot_key:
@@ -224,6 +230,8 @@ def load_teleop_robot_config(robot: str) -> TeleopRobotConfig:
         raise ValueError("retarget.max_iter must be > 0")
     if cfg.ctrl_fps <= 0:
         raise ValueError("server.ctrl_fps must be > 0")
+    if cfg.vis_fps <= 0:
+        raise ValueError("server.vis_fps must be > 0")
     if cfg.lookback_ms < 0:
         raise ValueError("server.lookback_ms must be >= 0")
     if cfg.retarget_buffer_window_s <= 0:

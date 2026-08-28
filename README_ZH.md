@@ -25,14 +25,15 @@
 │   │   ├── tracking.yaml            # 本地参考动作模式
 │   │   ├── tracking_vr.yaml         # PICO 实时控制模式
 │   │   ├── controller.yaml          # 策略频率、增益和关节顺序
-│   │   └── bridge.yaml              # MuJoCo UDP 桥接配置
+│   │   ├── bridge.yaml              # MuJoCo UDP 桥接配置
+│   │   └── retarget/teleop.yaml     # PICO 重定向与浏览器可视化配置
 │   ├── src/
 │   │   ├── deploy.py                # GRIT 推理与控制入口
 │   │   ├── sim2sim.py               # MuJoCo 机器人进程
 │   │   └── runtime/
 │   │       ├── grit_policy.py       # GRIT ONNX 和动作契约
 │   │       └── grit_observation.py  # GRIT 观测构造
-│   ├── teleop/                      # XR 数据流和 G1 动作重定向
+│   ├── teleop/                      # XR 数据流、G1 重定向和 8080 Web viewer
 │   └── tests/test_grit_contract.py
 ├── g1_sim2real/                     # Unitree SDK2 原生硬件桥接器
 ├── THIRD_PARTY.md
@@ -45,7 +46,7 @@
 - Python 3.10 和 [uv](https://docs.astral.sh/uv/)
 - CMake 3.16+、支持 C++17 的编译器、`make` 和 `flock`
 - 运行交互式仿真所需的 MuJoCo 图形环境
-- 使用 PICO 时需要 XRoboToolkit、ADB 和 Python SDK
+- 使用 PICO 时需要 XRoboToolkit、Python SDK，以及与工作站同一局域网的低延迟 Wi-Fi
 - 真机部署需要 Unitree G1 和本地电脑通过网线连接
 
 在仓库根目录安装 Python 环境：
@@ -117,16 +118,19 @@ cd sim2real
 bash install_xrobottoolkit_sdk.sh
 ```
 
-PICO 通过 USB 连接时，运行以下脚本配置 ADB 隧道并重启头显端
-XRoboToolkit：
+该 Python 绑定由安装脚本在 `uv` 环境之外单独安装。完成安装后，如需再次同步
+环境，请使用 `uv sync --inexact`，避免清理该绑定。
+
+本仓库仅支持通过 Wi-Fi 传输 PICO 遥操作数据。启动 XRoboToolkit PC Service：
 
 ```bash
-cd sim2real
-bash scripts/setup_xrobotoolkit_usb.sh
+bash /opt/apps/roboticsservice/runService.sh
 ```
 
-通过以太网连接时，需要手动启动 XRoboToolkit PC Service，并在头显客户端
-中填入主机 IP。
+查询工作站的 Wi-Fi IPv4 地址，并将其填入头显端 XRoboToolkit 的
+`PC Service`。不要填写 `127.0.0.1`、容器地址或 G1 专用网口地址。连接成功后，
+头显端状态必须显示 `WORKING`，并启用 `Head`、`Controller`、`Send` 和
+`Full body`。
 
 启动动作重定向进程：
 
@@ -135,9 +139,15 @@ cd sim2real
 taskset -c 1 uv run teleop/serve_xrobot_teleop.py --robot g1
 ```
 
-实时链路使用 TCP 端口 `28701`、`28702` 和 `28703`。
+动作重定向服务默认同时启动浏览器可视化。在工作站打开
+<http://localhost:8080>，可以查看人体姿态和重定向后的 G1。局域网中的其他
+设备可打开 `http://<工作站Wi-Fi-IP>:8080`。
 
+实时控制链路使用 TCP 端口 `28701`、`28702` 和 `28703`，浏览器可视化使用
+TCP 端口 `8080`。
 
+如果工作站没有对应的 CPU 编号，可以去掉启动命令中的 `taskset -c ...`，不影响
+功能，只是不再固定进程使用的 CPU 核心。
 
 ## PICO sim2sim
 
@@ -168,7 +178,7 @@ taskset -c 4-7 uv run src/deploy.py \
 
 | PICO 按键 | 行为 |
 | --- | --- |
-| 左手 `X` | 激活 GRIT；激活后用于暂停实时动作 |
+| 左手 `X` | 激活 GRIT；激活后回到默认站立姿态 |
 | 右手 `A` | 开始或继续实时动作 |
 | 左手 `Y` | 停止控制器 |
 

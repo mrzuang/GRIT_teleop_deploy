@@ -20,7 +20,12 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
-from retarget.params import XR_BODY_JOINT_NAMES
+from retarget.params import (
+    XR_BODY_JOINT_NAMES,
+    load_human_body_names,
+    load_robot_axis_link_names,
+)
+from retarget.viser_viewer import MJViserViewer
 from retarget.xrobot_retarget import XRobotRetargetWorkerRuntime
 from utils.buffer import SharedLatestVrFrame, SharedRetargetFrameRingBuffer
 from utils.helper import (
@@ -99,10 +104,14 @@ class LowLatencyTeleopPoseZMQServer:
         self.args = args
         self.config = load_teleop_robot_config(args.robot)
         self.robot = self.config.robot_key
+        self.vis_fps = int(self.config.vis_fps)
         self.ctrl_fps = int(self.config.ctrl_fps)
         self.lookback_ns = int(float(self.config.lookback_ms) * 1e6)
         self.retarget_buffer_window_ns = int(float(self.config.retarget_buffer_window_s) * 1e9)
         self.log_interval_s = float(self.config.log_interval_s)
+        self.robot_axis_links = list(load_robot_axis_link_names(self.robot))
+        self.human_body_names = list(load_human_body_names(self.robot))
+        self.viewer = None
         self.max_iter = int(self.config.max_iter)
         self.root_dof = 7
         self.qpos_size = self.config.qpos_size
@@ -130,8 +139,8 @@ class LowLatencyTeleopPoseZMQServer:
             self.mp_ctx,
             qpos_size=self.qpos_size,
             capacity=retarget_buffer_capacity,
-            human_body_count=0,
-            store_human=False,
+            human_body_count=len(self.human_body_names),
+            store_human=bool(self.config.visualize),
         )
 
         self.stop_event = threading.Event()
@@ -152,6 +161,7 @@ class LowLatencyTeleopPoseZMQServer:
         self.request_thread = None
         self.control_thread = None
         self.stats_thread = None
+        self.visualization_thread = None
 
         self.shared_vr_frame = SharedLatestVrFrame(self.mp_ctx, joint_count=XR_BODY_JOINT_COUNT)
         self.worker_stop_event = self.mp_ctx.Event()
@@ -371,18 +381,43 @@ class LowLatencyTeleopPoseZMQServer:
 
             self.stop_event.wait(timeout=period_s)
 
+    def _visualization_loop(self) -> None:
+        if self.viewer is None:
+            return
+
+        period_s = 1.0 / float(self.vis_fps)
+        while not self.stop_event.is_set():
+            latest_frame = self.retarget_buffer.latest_frame()
+            if latest_frame.qpos is not None:
+                try:
+                    self.viewer.update_qpos(latest_frame.qpos)
+                    self.viewer.draw_human_data(
+                        latest_frame.human_positions,
+                        latest_frame.human_rotations_wxyz,
+                    )
+                    self.viewer.draw_robot_axes(self.robot_axis_links)
+                except Exception as exc:
+                    print(f"[Warning] visualization failed, disabling viewer: {exc}")
+                    self.viewer.close()
+                    self.viewer = None
+                    return
+            self.stop_event.wait(timeout=period_s)
+
     def setup(self) -> None:
         try:
             import zmq
         except ImportError as exc:
             raise ImportError("pyzmq is required for the teleop ZMQ server.") from exc
 
+        if self.config.visualize:
+            self.viewer = MJViserViewer(str(self.robot))
+
         worker_config = {
             "actual_human_height": float(self.config.actual_human_height),
             "max_iter": int(self.max_iter),
             "target_robot": self.config.robot_key,
             "qpos_size": self.qpos_size,
-            "send_human_motion": False,
+            "send_human_motion": bool(self.viewer is not None),
             "enable_height_alignment": bool(self.config.height_alignment_enabled),
             "height_alignment_xrobot_body_min_each_frame": bool(
                 self.config.height_alignment_xrobot_body_min_each_frame
@@ -459,6 +494,9 @@ class LowLatencyTeleopPoseZMQServer:
             print("  height_alignment: disabled")
         print(f"  calibration_button: {self.config.calibration_button}")
         print(f"  log_interval_s: {self.log_interval_s:.3f}")
+        print(f"  visualize: {self.config.visualize}")
+        if self.viewer is not None:
+            print("  viewer_url: http://localhost:8080")
         print(f"  retarget_worker_pid: {self.retarget_process.pid if self.retarget_process else None}")
 
     def run(self) -> None:
@@ -474,6 +512,12 @@ class LowLatencyTeleopPoseZMQServer:
             name="teleop-control",
             daemon=True,
         )
+        if self.viewer is not None:
+            self.visualization_thread = threading.Thread(
+                target=self._visualization_loop,
+                name="teleop-visualization",
+                daemon=True,
+            )
         if self.log_interval_s > 0.0:
             self.stats_thread = threading.Thread(
                 target=self._stats_loop,
@@ -483,6 +527,8 @@ class LowLatencyTeleopPoseZMQServer:
 
         self.request_thread.start()
         self.control_thread.start()
+        if self.visualization_thread is not None:
+            self.visualization_thread.start()
         if self.stats_thread is not None:
             self.stats_thread.start()
 
@@ -507,6 +553,7 @@ class LowLatencyTeleopPoseZMQServer:
             for thread in (
                 self.request_thread,
                 self.control_thread,
+                self.visualization_thread,
                 self.stats_thread,
             ):
                 if thread is not None:
@@ -518,6 +565,8 @@ class LowLatencyTeleopPoseZMQServer:
                     self.retarget_process.terminate()
                     self.retarget_process.join(timeout=1.0)
 
+            if self.viewer is not None:
+                self.viewer.close()
             if self.req_sock is not None:
                 self.req_sock.close(0)
             if self.rep_sock is not None:

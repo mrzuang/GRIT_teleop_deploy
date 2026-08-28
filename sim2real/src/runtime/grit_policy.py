@@ -268,6 +268,12 @@ class GritPolicy(ReferenceTrackingPolicy):
             drop = self.grit_ref_features.shape[0] - self.ref_len
             self.grit_ref_features = self.grit_ref_features[drop:]
 
+    def discard_future_ref_frames(self) -> int:
+        discarded = super().discard_future_ref_frames()
+        if discarded > 0 and self.grit_ref_features is not None:
+            self.grit_ref_features = self.grit_ref_features[: self.ref_len]
+        return discarded
+
     def _trim_ref_prefix(self) -> None:
         # Trim the feature cache by exactly the number of frames the parent
         # drops from the standard arrays.

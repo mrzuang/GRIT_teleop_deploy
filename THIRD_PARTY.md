@@ -22,3 +22,10 @@ vendored; `sim2real/install_xrobottoolkit_sdk.sh` obtains them from:
 
 Those projects remain subject to their own licenses and distribution terms.
 
+The browser retarget viewer installs the following Python packages rather than
+vendoring them:
+
+| Component | Upstream | License |
+| --- | --- | --- |
+| mjviser | https://github.com/mujocolab/mjviser | Apache-2.0 |
+| viser | https://github.com/viser-project/viser | Apache-2.0 |

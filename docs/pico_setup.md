@@ -6,6 +6,9 @@ This guide covers the one-time hardware and software setup required for GRIT
 whole-body teleoperation with PICO VR, including PICO hardware preparation,
 XRoboToolkit installation, Motion Tracker calibration, and network setup.
 
+This repository supports PICO teleoperation over Wi-Fi only. It does not use
+USB or ADB tunnels for the live data path.
+
 After completing this guide, return to the main README to continue with:
 
 - [PICO sim2sim](../README.md#pico-sim2sim)
@@ -62,33 +65,20 @@ cd sim2real
 bash install_xrobottoolkit_sdk.sh
 ```
 
+After installation, use `uv sync --inexact` for later environment syncs so
+`uv` does not remove the separately installed XRoboToolkit Python binding.
+
 ### 2. Install the PICO application
 
 1. Put on the PICO headset, complete the initial PICO setup, and connect the
    headset to Wi-Fi.
-2. Enable PICO developer options and select `File transfer` in the USB
-   connection settings.
-3. Download
+2. Open
    [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk)
-   on the workstation. Other versions are available from the
+   directly in the PICO browser. Other versions are available from the
    [XRoboToolkit Unity Client releases](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases).
-4. Copy the APK to removable storage connected to the PICO, or transfer it to
-   the headset over USB.
-5. Select `XRoboToolkit-PICO-1.1.1.apk` in the PICO file manager and install it.
-6. Open XRoboToolkit from the `Unknown` sources section of the application
+3. Select the downloaded APK in the PICO file manager and install it.
+4. Open XRoboToolkit from the `Unknown` sources section of the application
    library.
-
-If ADB is installed on the workstation, you can install the application over
-USB instead:
-
-```bash
-adb devices
-adb install -g XRoboToolkit-PICO-1.1.1.apk
-```
-
-After running `adb devices`, accept the USB debugging prompt in the headset if
-one appears. A successful connection is listed as `device`, not
-`unauthorized`.
 
 ## Step 2: Configure the PICO teleoperation environment
 
@@ -152,6 +142,11 @@ The live pipeline uses TCP ports `28701`, `28702`, and `28703`. Confirm that the
 terminal reports no connection errors before continuing with the MuJoCo or
 hardware control workflow.
 
+The retargeting process starts a browser viewer on TCP `8080` by default. Open
+<http://localhost:8080> on the workstation, or
+`http://<workstation-wifi-ip>:8080` from another device on the same LAN, to
+inspect the human pose and retargeted robot.
+
 ## Connection checklist
 
 Before deployment, verify that:
@@ -163,7 +158,7 @@ Before deployment, verify that:
 - XRoboToolkit displays `WORKING`
 - `Head`, `Controller`, `Send`, and `Full body` are configured as described
 - the PC Service and GRIT retargeting process are both running
-- the firewall does not block TCP ports `28701`, `28702`, or `28703`
+- the firewall allows the XRoboToolkit PC Service and TCP `8080` on the local network
 
 ## Troubleshooting
 
@@ -184,10 +179,17 @@ Before deployment, verify that:
 - Repeat the floor calibration and make sure the left and right trackers are not
   reversed.
 
-### ADB displays `unauthorized`
+### The retargeting log stays at `cb=0`
 
-Reconnect the USB cable, accept the USB debugging authorization in the headset,
-and run `adb devices` again.
+- `cb=0` means that the Python SDK has not received any PICO motion frames.
+  Confirm that XRoboToolkit displays `WORKING` and that `Head`, `Controller`,
+  `Send`, and `Full body` are enabled.
+- Confirm that the headset uses the workstation's Wi-Fi address, not
+  `127.0.0.1`, a container address, or the dedicated G1 network address. Select
+  `Reconnect` after changing it.
+- Once `cb` increases, if `req` remains `0`, confirm that GRIT is running with
+  `tracking_vr.yaml`, then press keyboard `s`, left PICO `X`, and right PICO `A`
+  in that order.
 
 ### Network latency or motion jitter is high
 
@@ -195,4 +197,3 @@ Use 5 GHz Wi-Fi, reduce the distance between the PICO and access point, and
 limit video streaming or large file transfers on the same wireless network. For
 hardware deployment, configure the dedicated G1 network interface separately
 from the local network interface used by the PICO to avoid routing conflicts.
-

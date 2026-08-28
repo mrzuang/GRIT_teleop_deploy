@@ -14,7 +14,7 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 echo "[install_xrobottoolkit_sdk] syncing uv environment"
-(cd "$SIM2REAL_ROOT" && uv sync)
+(cd "$SIM2REAL_ROOT" && uv sync --inexact)
 
 mkdir -p "$DEPS_DIR"
 

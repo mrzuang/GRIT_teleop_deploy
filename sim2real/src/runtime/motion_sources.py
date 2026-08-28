@@ -74,7 +74,7 @@ class MotionSourceBase(ABC):
             path = str(path if path.is_absolute() else (cfg_dir / path))
             t0, t1 = int(mc.start), int(mc.end)
 
-            data = np.load(path, allow_pickle=True)
+            data = np.load(path, allow_pickle=False)
             if not isinstance(data, np.lib.npyio.NpzFile):
                 raise ValueError(f"[{self.__class__.__name__}] Only .npz is supported: {path}")
             required = {
@@ -362,7 +362,7 @@ class UDPMotionSource(MotionSourceBase):
 class VRMotionSource(MotionSourceBase):
     POLICY_ACTIVATE_BUTTON = "left_key_one"  # PICO X before policy activation
     POLICY_START_BUTTON = "right_key_one"  # PICO A
-    VR_PAUSE_BUTTON = "left_key_one"  # PICO X while policy is active
+    RETURN_DEFAULT_BUTTON = "left_key_one"  # PICO X while policy is active
     STOP_BUTTON = "left_key_two"  # PICO Y
 
     def __init__(self, policy: "ReferenceTrackingPolicy", policy_cfg: DictToClass):
@@ -403,7 +403,7 @@ class VRMotionSource(MotionSourceBase):
         self._pending_start_request = False
         self._vr_user_enabled = False
         self._prev_start_btn = False
-        self._prev_pause_btn = False
+        self._prev_default_btn = False
         self._prev_stop_btn = False
         self._latest_control_buttons: dict[str, object] = {}
         self._latest_control_sticks: dict[str, float] = {}
@@ -603,19 +603,19 @@ class VRMotionSource(MotionSourceBase):
 
         self._latest_control_buttons = dict(latest_buttons)
         start_btn = bool(latest_buttons.get(self.POLICY_START_BUTTON, False))
-        pause_btn = bool(latest_buttons.get(self.VR_PAUSE_BUTTON, False))
+        default_btn = bool(latest_buttons.get(self.RETURN_DEFAULT_BUTTON, False))
         stop_btn = bool(latest_buttons.get(self.STOP_BUTTON, False))
         start_rise = start_btn and (not self._prev_start_btn)
-        pause_rise = pause_btn and (not self._prev_pause_btn)
+        default_rise = default_btn and (not self._prev_default_btn)
         stop_rise = stop_btn and (not self._prev_stop_btn)
         self._prev_start_btn = start_btn
-        self._prev_pause_btn = pause_btn
+        self._prev_default_btn = default_btn
         self._prev_stop_btn = stop_btn
 
         controller = getattr(self.policy, "controller", None)
         policy_active = getattr(controller, "current_policy", None) is self.policy
 
-        if pause_rise or stop_rise:
+        if default_rise or stop_rise:
             self._vr_user_enabled = False
             self._pending_start_request = False
             self._req_inflight = False
@@ -627,7 +627,12 @@ class VRMotionSource(MotionSourceBase):
             if stop_rise:
                 print("[VRMotionSource] VR stop from control button")
             elif policy_active:
-                print("[VRMotionSource] VR pause from control button")
+                discarded = self.policy.discard_future_ref_frames()
+                self.append_motion_from_tail("default")
+                print(
+                    "[VRMotionSource] PICO X returning to default pose "
+                    f"(discarded_future_frames={discarded})"
+                )
             else:
                 print("[VRMotionSource] PICO X requested policy activation in default pose")
 
@@ -965,7 +970,7 @@ class VRMotionSource(MotionSourceBase):
         self._req_inflight_steps_left = 0
         self._vr_user_enabled = start_requested
         self._prev_start_btn = bool(buttons.get(self.POLICY_START_BUTTON, False))
-        self._prev_pause_btn = bool(buttons.get(self.VR_PAUSE_BUTTON, False))
+        self._prev_default_btn = bool(buttons.get(self.RETURN_DEFAULT_BUTTON, False))
         self._prev_stop_btn = bool(buttons.get(self.STOP_BUTTON, False))
         self._vr_active = False
         self._vr_in_transition = False

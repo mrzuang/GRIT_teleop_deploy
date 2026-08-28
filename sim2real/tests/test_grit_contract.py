@@ -3,6 +3,7 @@ import sys
 import threading
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import numpy as np
@@ -26,10 +27,11 @@ from runtime.grit_observation import (
 from runtime.grit_policy import (
     GRIT_ACTION_JOINT_NAMES,
     GRIT_ACTION_SCALE_BY_NAME,
+    GritPolicy,
     GritONNXModel,
 )
 from runtime.math_utils import _slerp
-from runtime.motion_sources import VRMotionSource, _validate_default_motion
+from runtime.motion_sources import MotionSourceBase, VRMotionSource, _validate_default_motion
 from deploy import Controller
 
 
@@ -56,6 +58,28 @@ class GritContractTest(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValueError, "exactly one frame"):
             _validate_default_motion(motions, "test")
+
+    def test_motion_loader_rejects_pickled_object_arrays(self):
+        with TemporaryDirectory() as tmp_dir:
+            motion_path = Path(tmp_dir) / "unsafe.npz"
+            np.savez(
+                motion_path,
+                fps=np.array(50.0, dtype=np.float32),
+                joint_pos=np.array([{"unsafe": True}], dtype=object),
+                joint_vel=np.zeros((1, 1), dtype=np.float32),
+                body_pos_w=np.zeros((1, 1, 3), dtype=np.float32),
+                body_quat_w=np.array([[[1.0, 0.0, 0.0, 0.0]]], dtype=np.float32),
+                body_lin_vel_w=np.zeros((1, 1, 3), dtype=np.float32),
+                body_ang_vel_w=np.zeros((1, 1, 3), dtype=np.float32),
+            )
+            config = SimpleNamespace(
+                _config_dir=tmp_dir,
+                motions=[{"name": "unsafe", "path": motion_path, "start": 0, "end": -1}],
+                motion_clips=[],
+            )
+
+            with self.assertRaisesRegex(ValueError, "Object arrays cannot be loaded"):
+                MotionSourceBase(SimpleNamespace(), config)
 
     def test_vr_default_clip_matches_controller_default_pose(self):
         config_dir = PROJECT_ROOT / "config" / "g1"
@@ -169,10 +193,10 @@ class GritContractTest(unittest.TestCase):
     def test_vr_operator_button_names_match_pico_a_x_y(self):
         self.assertEqual(VRMotionSource.POLICY_ACTIVATE_BUTTON, "left_key_one")
         self.assertEqual(VRMotionSource.POLICY_START_BUTTON, "right_key_one")
-        self.assertEqual(VRMotionSource.VR_PAUSE_BUTTON, "left_key_one")
+        self.assertEqual(VRMotionSource.RETURN_DEFAULT_BUTTON, "left_key_one")
         self.assertEqual(VRMotionSource.STOP_BUTTON, "left_key_two")
 
-    def test_vr_control_messages_map_pico_a_to_start_x_to_pause_and_y_to_stop(self):
+    def test_vr_control_messages_map_pico_a_to_start_x_to_default_and_y_to_stop(self):
         class FakeControlSocket:
             def __init__(self, payload):
                 self.payload = payload
@@ -191,13 +215,20 @@ class GritContractTest(unittest.TestCase):
 
         source = VRMotionSource.__new__(VRMotionSource)
         controller = SimpleNamespace(config={})
-        source.policy = SimpleNamespace(controller=controller)
+        events = []
+        source.policy = SimpleNamespace(
+            controller=controller,
+            discard_future_ref_frames=lambda: events.append("discard") or 4,
+        )
+        source.append_motion_from_tail = (
+            lambda name: events.append(f"append:{name}") or True
+        )
         controller.current_policy = source.policy
         source._latest_control_buttons = {}
         source._latest_control_sticks = {}
         source._hand_control_cfg = {}
         source._prev_start_btn = False
-        source._prev_pause_btn = False
+        source._prev_default_btn = False
         source._prev_stop_btn = False
         source._vr_user_enabled = False
         source._pending_start_request = False
@@ -225,6 +256,7 @@ class GritContractTest(unittest.TestCase):
         source._drain_control()
         self.assertFalse(source._vr_user_enabled)
         self.assertFalse(source._pending_start_request)
+        self.assertEqual(events, ["discard", "append:default"])
         self.assertEqual(
             source.poll_operator_buttons(),
             {"activate_policy": True, "stop": False},
@@ -270,7 +302,7 @@ class GritContractTest(unittest.TestCase):
         source._latest_control_sticks = {}
         source._hand_control_cfg = {}
         source._prev_start_btn = False
-        source._prev_pause_btn = False
+        source._prev_default_btn = False
         source._prev_stop_btn = False
         source._vr_user_enabled = False
         source._pending_start_request = False
@@ -285,6 +317,28 @@ class GritContractTest(unittest.TestCase):
 
         self.assertFalse(source._vr_user_enabled)
         self.assertFalse(source._pending_start_request)
+
+    def test_grit_discard_future_frames_keeps_feature_cache_aligned(self):
+        policy = GritPolicy.__new__(GritPolicy)
+        policy.ref_idx = 2
+        policy.ref_len = 6
+        policy.ref_joint_pos = np.arange(18, dtype=np.float32).reshape(6, 3)
+        policy.ref_root_quat = np.arange(24, dtype=np.float32).reshape(6, 4)
+        policy.ref_root_pos = np.arange(18, dtype=np.float32).reshape(6, 3)
+        policy.grit_ref_features = np.arange(
+            6 * GRIT_FEATURE_DIM, dtype=np.float32
+        ).reshape(6, GRIT_FEATURE_DIM)
+        policy.current_done = False
+
+        discarded = policy.discard_future_ref_frames()
+
+        self.assertEqual(discarded, 3)
+        self.assertEqual(policy.ref_len, 3)
+        self.assertTrue(policy.current_done)
+        self.assertEqual(policy.ref_joint_pos.shape[0], 3)
+        self.assertEqual(policy.ref_root_quat.shape[0], 3)
+        self.assertEqual(policy.ref_root_pos.shape[0], 3)
+        self.assertEqual(policy.grit_ref_features.shape[0], 3)
 
     def test_vr_alignment_preserves_relative_root_height(self):
         source = VRMotionSource.__new__(VRMotionSource)

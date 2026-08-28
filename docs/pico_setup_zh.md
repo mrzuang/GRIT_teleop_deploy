@@ -5,6 +5,8 @@
 本文介绍使用 PICO VR 进行 GRIT 全身遥操作前所需的一次性硬件和软件配置，
 包括 PICO 硬件准备、XRoboToolkit 安装、体感追踪器标定和网络连接。
 
+本仓库仅支持通过 Wi-Fi 传输 PICO 遥操作数据，不使用 USB 或 ADB 隧道。
+
 完成本文步骤后，可返回主文档继续运行：
 
 - [PICO sim2sim](../README_ZH.md#pico-sim2sim)
@@ -56,28 +58,19 @@ cd sim2real
 bash install_xrobottoolkit_sdk.sh
 ```
 
+安装完成后，如需再次同步环境，请使用 `uv sync --inexact`，避免 `uv` 清理单独
+安装的 XRoboToolkit Python 绑定。
+
 ### 2. 安装 PICO 应用
 
 1. 戴上 PICO 头显，完成 PICO 快速设置，并确认头显已连接 Wi-Fi。
-2. 打开 PICO 开发者选项，在 USB 连接设置中选择“传输文件”。
-3. 在本地电脑下载
+2. 使用 PICO 浏览器打开
    [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk)。
    其他版本可在
    [XRoboToolkit Unity Client Releases](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases)
    页面获取。
-4. 将 APK 拷贝到移动存储设备并连接 PICO，或者通过 USB 将 APK 拷贝到头显。
-5. 在 PICO 文件管理器中选择 `XRoboToolkit-PICO-1.1.1.apk`，然后点击安装。
-6. 安装完成后，在应用库的 `Unknown`（未知来源）分区打开 XRoboToolkit。
-
-如果电脑已安装 ADB，也可以通过 USB 安装：
-
-```bash
-adb devices
-adb install -g XRoboToolkit-PICO-1.1.1.apk
-```
-
-运行 `adb devices` 后，头显中可能会弹出 USB 调试授权提示。授权成功后，设备
-状态应显示为 `device`，而不是 `unauthorized`。
+3. 下载完成后，在 PICO 文件管理器中选择 APK 并安装。
+4. 安装完成后，在应用库的 `Unknown`（未知来源）分区打开 XRoboToolkit。
 
 ## 步骤二：配置 PICO 遥操作环境
 
@@ -131,6 +124,10 @@ taskset -c 1 uv run teleop/serve_xrobot_teleop.py --robot g1
 实时链路使用 TCP 端口 `28701`、`28702` 和 `28703`。启动后确认终端没有连接
 错误，再继续运行 MuJoCo 或真机控制流程。
 
+动作重定向进程默认在 TCP `8080` 启动浏览器可视化。在工作站打开
+<http://localhost:8080>，或在同一局域网的其他设备打开
+`http://<工作站Wi-Fi-IP>:8080`，可以查看人体姿态和重定向后的机器人。
+
 ## 连接检查
 
 继续部署前，逐项确认：
@@ -141,7 +138,7 @@ taskset -c 1 uv run teleop/serve_xrobot_teleop.py --robot g1
 - XRoboToolkit 显示 `WORKING`
 - `Head`、`Controller`、`Send` 和 `Full body` 已按要求设置
 - PC Service 与 GRIT 动作重定向进程均在运行
-- 防火墙没有阻止 TCP 端口 `28701`、`28702` 和 `28703`
+- 防火墙允许 XRoboToolkit PC Service 和 TCP `8080` 在本地网络通信
 
 ## 常见问题
 
@@ -158,9 +155,14 @@ taskset -c 1 uv run teleop/serve_xrobot_teleop.py --robot g1
 - 确认 `Pico Motion Tracker` 设置为 `Full body`。
 - 重新执行地面校准，并确认左右追踪器没有绑反。
 
-### ADB 显示 `unauthorized`
+### 动作重定向日志一直显示 `cb=0`
 
-重新插拔 USB 线，在头显中接受 USB 调试授权，然后再次运行 `adb devices`。
+- `cb=0` 表示 Python SDK 没有收到 PICO 动作帧。确认 XRoboToolkit 显示
+  `WORKING`，并检查 `Head`、`Controller`、`Send` 和 `Full body`。
+- 确认头显填写的是工作站 Wi-Fi 地址，而不是 `127.0.0.1`、容器地址或 G1
+  专用网口地址。修改后点击 `Reconnect`。
+- `cb` 开始增长后，如果 `req` 仍为 `0`，确认使用 `tracking_vr.yaml` 启动了
+  GRIT，并已依次按下终端中的 `s`、PICO 左手 `X` 和右手 `A`。
 
 ### 网络延迟或动作抖动明显
 

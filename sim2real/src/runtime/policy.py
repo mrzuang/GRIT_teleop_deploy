@@ -325,6 +325,28 @@ class ReferenceTrackingPolicy(Policy):
         self.current_done = (self.ref_idx >= self.ref_len - 1)
         self._trim_ref_prefix()
 
+    def discard_future_ref_frames(self) -> int:
+        """Discard queued reference frames after the frame being executed."""
+        if (
+            self.ref_joint_pos is None
+            or self.ref_root_quat is None
+            or self.ref_root_pos is None
+            or self.ref_len <= 0
+        ):
+            return 0
+
+        keep = min(max(int(self.ref_idx) + 1, 1), int(self.ref_len))
+        discarded = int(self.ref_len) - keep
+        if discarded <= 0:
+            return 0
+
+        self.ref_joint_pos = self.ref_joint_pos[:keep]
+        self.ref_root_quat = self.ref_root_quat[:keep]
+        self.ref_root_pos = self.ref_root_pos[:keep]
+        self.ref_len = keep
+        self.current_done = True
+        return discarded
+
     def _trim_ref_prefix(self) -> None:
         if (
             self.ref_joint_pos is None

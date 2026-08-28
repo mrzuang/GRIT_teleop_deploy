@@ -27,14 +27,15 @@ Training and data-generation code are outside the scope of this repository.
 │   │   ├── tracking.yaml            # local reference-motion mode
 │   │   ├── tracking_vr.yaml         # live PICO mode
 │   │   ├── controller.yaml          # policy loop, gains, and joint order
-│   │   └── bridge.yaml              # MuJoCo UDP bridge settings
+│   │   ├── bridge.yaml              # MuJoCo UDP bridge settings
+│   │   └── retarget/teleop.yaml     # PICO retargeting and browser-viewer settings
 │   ├── src/
 │   │   ├── deploy.py                # GRIT inference and control entry point
 │   │   ├── sim2sim.py               # MuJoCo robot process
 │   │   └── runtime/
 │   │       ├── grit_policy.py       # GRIT ONNX/action contract
 │   │       └── grit_observation.py  # GRIT observation construction
-│   ├── teleop/                      # XR stream and G1 retargeting
+│   ├── teleop/                      # XR stream, G1 retargeting, and port-8080 viewer
 │   └── tests/test_grit_contract.py
 ├── g1_sim2real/                     # native Unitree SDK2 bridge
 ├── THIRD_PARTY.md
@@ -47,7 +48,8 @@ Training and data-generation code are outside the scope of this repository.
 - Python 3.10 and [uv](https://docs.astral.sh/uv/)
 - CMake 3.16+, a C++17 compiler, `make`, and `flock`
 - a working MuJoCo graphics stack for the interactive simulator
-- XRoboToolkit, ADB, and the Python SDK for PICO control
+- XRoboToolkit, its Python SDK, and low-latency Wi-Fi shared with the workstation
+  for PICO control
 - a Unitree G1 and a dedicated robot-facing network interface for hardware use
 
 Install the Python environment from the repository root:
@@ -119,16 +121,21 @@ cd sim2real
 bash install_xrobottoolkit_sdk.sh
 ```
 
-For a headset connected over USB, configure the ADB tunnels and restart the
-XRoboToolkit client:
+The Python binding is installed separately from the packages managed by `uv`.
+After installing it, use `uv sync --inexact` for later environment syncs so the
+binding is retained.
+
+This repository supports PICO teleoperation over Wi-Fi only. Start the
+XRoboToolkit PC Service:
 
 ```bash
-cd sim2real
-bash scripts/setup_xrobotoolkit_usb.sh
+bash /opt/apps/roboticsservice/runService.sh
 ```
 
-For Ethernet operation, start the XRoboToolkit PC service manually and set the
-headset client to the host IP.
+Find the workstation's Wi-Fi IPv4 address and enter it as `PC Service` in the
+XRoboToolkit headset client. Do not use `127.0.0.1`, a container address, or the
+dedicated G1 network-interface address. The headset must display `WORKING`, with
+`Head`, `Controller`, `Send`, and `Full body` enabled.
 
 Start the retargeting process with:
 
@@ -137,7 +144,17 @@ cd sim2real
 taskset -c 1 uv run teleop/serve_xrobot_teleop.py --robot g1
 ```
 
-The live pipeline uses TCP ports `28701`, `28702`, and `28703`.
+The retargeting process also starts the browser viewer by default. Open
+<http://localhost:8080> on the workstation to inspect the human pose and the
+retargeted G1. Other devices on the same LAN can use
+`http://<workstation-wifi-ip>:8080`.
+
+The live control pipeline uses TCP ports `28701`, `28702`, and `28703`; the
+browser viewer uses TCP port `8080`.
+
+If the listed CPU IDs are unavailable on the workstation, omit the
+`taskset -c ...` prefix. CPU affinity is an optimization, not a functional
+requirement.
 
 ## PICO sim2sim
 
@@ -168,7 +185,7 @@ Press `s` in terminal 3 before activating live control.
 
 | PICO input | Behavior |
 | --- | --- |
-| Left `X` | Activate GRIT, then pause live motion |
+| Left `X` | Activate GRIT, then return to the default standing pose |
 | Right `A` | Start or resume live motion |
 | Left `Y` | Stop the controller |
 
