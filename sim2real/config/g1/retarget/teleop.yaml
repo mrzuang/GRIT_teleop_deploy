@@ -2,7 +2,7 @@ robot_key: g1
 
 retarget:
   max_iter: 5
-  actual_human_height: 1.75
+  actual_human_height: 1.73
   height_alignment:
     enabled: true
     xrobot_body_min_each_frame: false
