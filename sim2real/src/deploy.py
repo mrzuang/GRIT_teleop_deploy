@@ -70,6 +70,7 @@ class Controller:
             "down": False,
         }
         self._keyboard_start_event = threading.Event()
+        self._keyboard_exit_event = threading.Event()
         self._keyboard_thread: Optional[threading.Thread] = None
         self.sticks = {
             "lx": 0.0,
@@ -321,12 +322,22 @@ class Controller:
         return callable(getattr(source, "poll_operator_buttons", None))
 
     def _on_keyboard_press(self, key: str) -> None:
-        if str(key).lower() != "s":
+        ch = str(key).lower()
+        if ch == "q":
+            if not self._keyboard_exit_event.is_set():
+                print("[Deploy] keyboard 'q' received; emergency exit requested.")
+            self._keyboard_exit_event.set()
+            stop_listening()
+            return
+        if ch != "s":
             return
         if not self._keyboard_start_event.is_set():
             print("[Deploy] keyboard 's' received; leaving zero torque state.")
         self._keyboard_start_event.set()
-        stop_listening()
+
+    def _raise_if_keyboard_exit_requested(self) -> None:
+        if self._keyboard_exit_event.is_set():
+            raise KeyboardInterrupt
 
     def _keyboard_listener_loop(self) -> None:
         try:
@@ -360,20 +371,17 @@ class Controller:
 
     def zero_torque_state(self):
         print("Enter zero torque state.")
+        self._start_keyboard_listener()
         if bool(getattr(self.args, "auto_start", False)):
             print("Auto-start enabled; sending one zero-torque command.")
             self.set_zero_cmd()
             self.send_cmd()
             return
-        self._start_keyboard_listener()
-        print("Waiting for the start signal (press 's' in this deploy terminal)...")
-        try:
-            while not self.buttons["start"] and not self._keyboard_start_event.is_set():
-                self.process_state(wait_next=True)
-                self.set_zero_cmd()
-                self.send_cmd()
-        finally:
-            self._stop_keyboard_listener()
+        print("Waiting for the start signal (press 's'; press 'q' for emergency exit)...")
+        while not self.buttons["start"] and not self._keyboard_start_event.is_set():
+            self.process_state(wait_next=True)
+            self.set_zero_cmd()
+            self.send_cmd()
 
     def move_to_default_qpos(self):
         print("Moving to init pos....")
@@ -426,10 +434,12 @@ class Controller:
         self.send_cmd()
 
     def process_state(self, *, wait_next: bool = False, timeout_s: float | None = None) -> bool:
+        self._raise_if_keyboard_exit_requested()
         if wait_next:
             pkt = self.transport.read_next_state(after_seq=self.last_state_seq, timeout_s=timeout_s, with_meta=True)
         else:
             pkt = self.transport.read_latest_state(with_meta=True)
+        self._raise_if_keyboard_exit_requested()
         if pkt is None:
             return False
 

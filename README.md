@@ -247,10 +247,17 @@ Press `s` only after the GRIT process reports valid robot state. Verify the
 joint order, gains, default pose, network interface, and model hash before
 releasing physical support.
 
+Press `q` in terminal 3 to emergency-exit the GRIT control process, or in
+terminal 2 to emergency-exit the native bridge and its low-level control loop.
+This keyboard action is separate from the PICO controls and does not replace
+the robot's physical emergency stop.
+
 The native bridge keeps Unitree's motion service active until it receives a
 valid Python command. After handoff, a stale or missing command stream switches
-the bridge to continuous damping after `0.2 s` by default. This watchdog is not
-a substitute for a physical emergency stop or a tested recovery procedure.
+the watchdog to a log-only timeout state after `0.2 s` by default. It does not
+write damping or otherwise modify the current low-level command while waiting
+for the Python command stream to recover. This watchdog is not a substitute for
+a physical emergency stop or a tested recovery procedure.
 
 ## GRIT model contract
 

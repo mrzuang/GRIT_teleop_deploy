@@ -128,15 +128,22 @@ class GritContractTest(unittest.TestCase):
         self.assertFalse(controller.is_alive)
         self.assertEqual(calls, ["keyboard", "transport"])
 
-    def test_deploy_keyboard_s_requests_zero_torque_exit(self):
+    def test_deploy_keyboard_s_starts_and_q_requests_emergency_exit(self):
         controller = Controller.__new__(Controller)
         controller._keyboard_start_event = threading.Event()
+        controller._keyboard_exit_event = threading.Event()
 
         controller._on_keyboard_press("a")
         self.assertFalse(controller._keyboard_start_event.is_set())
+        self.assertFalse(controller._keyboard_exit_event.is_set())
 
         controller._on_keyboard_press("s")
         self.assertTrue(controller._keyboard_start_event.is_set())
+
+        controller._on_keyboard_press("q")
+        self.assertTrue(controller._keyboard_exit_event.is_set())
+        with self.assertRaises(KeyboardInterrupt):
+            controller._raise_if_keyboard_exit_requested()
 
     def test_vr_fade_in_honors_controller_auto_start(self):
         for auto_start in (False, True):

@@ -300,7 +300,7 @@ struct LowLevelConfig {
   uint8_t mode_pr = 0;
   double damping_kd = 8.0;
   double command_timeout_s = 0.2;
-  double damping_publish_hz = 50.0;
+  double shutdown_damping_publish_hz = 50.0;
   double shutdown_damping_duration_s = 0.2;
   double wait_lowstate_timeout_s = 0.0;
   bool release_motion_service = true;
@@ -362,7 +362,8 @@ BridgeConfig load_config(const std::string & path)
   cfg.low_level.mode_pr = static_cast<uint8_t>(yaml_value_or<int>(low["mode_pr"], 0));
   cfg.low_level.damping_kd = yaml_value_or<double>(low["damping_kd"], 8.0);
   cfg.low_level.command_timeout_s = yaml_value_or<double>(low["command_timeout_s"], 0.2);
-  cfg.low_level.damping_publish_hz = yaml_value_or<double>(low["damping_publish_hz"], 50.0);
+  cfg.low_level.shutdown_damping_publish_hz =
+      yaml_value_or<double>(low["shutdown_damping_publish_hz"], 50.0);
   cfg.low_level.shutdown_damping_duration_s =
       yaml_value_or<double>(low["shutdown_damping_duration_s"], 0.2);
   cfg.low_level.wait_lowstate_timeout_s = yaml_value_or<double>(low["wait_lowstate_timeout_s"], 0.0);
@@ -379,8 +380,8 @@ BridgeConfig load_config(const std::string & path)
   if (cfg.low_level.command_timeout_s <= 0.0) {
     throw std::runtime_error("low_level.command_timeout_s must be positive");
   }
-  if (cfg.low_level.damping_publish_hz <= 0.0) {
-    throw std::runtime_error("low_level.damping_publish_hz must be positive");
+  if (cfg.low_level.shutdown_damping_publish_hz <= 0.0) {
+    throw std::runtime_error("low_level.shutdown_damping_publish_hz must be positive");
   }
   if (cfg.low_level.shutdown_damping_duration_s < 0.0) {
     throw std::runtime_error("low_level.shutdown_damping_duration_s must be non-negative");
@@ -945,12 +946,11 @@ class G1UdpBridge {
       std::lock_guard<std::mutex> lock(cmd_write_mutex_);
       write_damping_command_locked();
       low_level_active_.store(true, std::memory_order_release);
-      watchdog_damping_active_.store(true, std::memory_order_relaxed);
+      command_timeout_active_.store(false, std::memory_order_relaxed);
     }
     start_command_watchdog_thread();
     std::cout << "[G1Bridge] Low-level handoff complete; command watchdog active (timeout="
-              << cfg_.low_level.command_timeout_s << "s, damping_hz="
-              << cfg_.low_level.damping_publish_hz << ")" << std::endl;
+              << cfg_.low_level.command_timeout_s << "s, timeout_action=log_only)" << std::endl;
   }
 
   void run()
@@ -1287,7 +1287,7 @@ class G1UdpBridge {
   void stdin_button_loop()
   {
     ScopedTerminalRawMode raw_mode(STDIN_FILENO);
-    std::cout << "[G1Bridge] stdin buttons enabled: s=start, a=A, x=stop"
+    std::cout << "[G1Bridge] stdin buttons enabled: s=start, a=A, x=stop, q=emergency exit"
               << (raw_mode.enabled() ? " (single-key tty mode)" : " (line-buffered/pipe mode)") << std::endl;
 
     while (!stdin_button_stop_.load(std::memory_order_relaxed) &&
@@ -1340,6 +1340,10 @@ class G1UdpBridge {
       pulse_stdin_button(stdin_a_until_ns_, "A");
     } else if (ch == 'x') {
       pulse_stdin_button(stdin_stop_until_ns_, "stop");
+    } else if (ch == 'q') {
+      stdin_button_event_count_.fetch_add(1, std::memory_order_relaxed);
+      std::cerr << "[G1Bridge] Emergency exit requested from keyboard" << std::endl;
+      g_stop_requested.store(true, std::memory_order_relaxed);
     }
   }
 
@@ -1625,17 +1629,17 @@ class G1UdpBridge {
         initial_command_cv_.notify_all();
       }
 
-      bool watchdog_recovered = false;
+      bool timeout_recovered = false;
       {
         std::lock_guard<std::mutex> lock(cmd_write_mutex_);
         if (!low_level_active_.load(std::memory_order_acquire)) {
           return;
         }
         lowcmd_publisher_->Write(cmd);
-        watchdog_recovered = watchdog_damping_active_.exchange(false, std::memory_order_relaxed);
+        timeout_recovered = command_timeout_active_.exchange(false, std::memory_order_relaxed);
       }
-      if (watchdog_recovered) {
-        std::cout << "[G1Bridge] Fresh Python command stream active; leaving watchdog damping" << std::endl;
+      if (timeout_recovered) {
+        std::cout << "[G1Bridge] Fresh Python command stream active after timeout" << std::endl;
       }
       record_policy_delay(yaml_u64_optional(packet.data["state_receive_time_ns"]));
       command_forward_count_.fetch_add(1, std::memory_order_relaxed);
@@ -1714,23 +1718,16 @@ class G1UdpBridge {
 
   void command_watchdog_loop()
   {
+    const double check_interval_s = std::min(0.02, cfg_.low_level.command_timeout_s / 4.0);
     const auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(1.0 / cfg_.low_level.damping_publish_hz));
+        std::chrono::duration<double>(check_interval_s));
     auto next = SteadyClock::now();
     while (!command_watchdog_stop_.load(std::memory_order_relaxed)) {
-      bool entered_damping = false;
-      {
-        std::lock_guard<std::mutex> lock(cmd_write_mutex_);
-        const uint64_t now = now_ns();
-        if (low_level_active_.load(std::memory_order_acquire) && command_timed_out(now)) {
-          entered_damping = !watchdog_damping_active_.exchange(true, std::memory_order_relaxed);
-          write_damping_command_locked();
-          watchdog_damping_publish_count_.fetch_add(1, std::memory_order_relaxed);
-        }
-      }
-      if (entered_damping) {
+      const uint64_t now = now_ns();
+      if (low_level_active_.load(std::memory_order_acquire) && command_timed_out(now) &&
+          !command_timeout_active_.exchange(true, std::memory_order_relaxed)) {
         command_timeout_event_count_.fetch_add(1, std::memory_order_relaxed);
-        std::cerr << "[G1Bridge] Python command timeout; entering continuous damping" << std::endl;
+        std::cerr << "[G1Bridge] Python command timeout; waiting for recovery without changing LowCmd" << std::endl;
       }
       next += period;
       std::this_thread::sleep_until(next);
@@ -1741,8 +1738,8 @@ class G1UdpBridge {
   {
     const int count = std::max(
         1, static_cast<int>(std::ceil(
-               cfg_.low_level.shutdown_damping_duration_s * cfg_.low_level.damping_publish_hz)));
-    const auto period = std::chrono::duration<double>(1.0 / cfg_.low_level.damping_publish_hz);
+               cfg_.low_level.shutdown_damping_duration_s * cfg_.low_level.shutdown_damping_publish_hz)));
+    const auto period = std::chrono::duration<double>(1.0 / cfg_.low_level.shutdown_damping_publish_hz);
     for (int i = 0; i < count; ++i) {
       publish_damping_command();
       if (i + 1 < count) {
@@ -1779,8 +1776,6 @@ class G1UdpBridge {
     const uint64_t timer_skipped_reads = timer_skipped_read_count_.exchange(0, std::memory_order_relaxed);
     const uint64_t stdin_button_events = stdin_button_event_count_.exchange(0, std::memory_order_relaxed);
     const uint64_t command_timeout_events = command_timeout_event_count_.exchange(0, std::memory_order_relaxed);
-    const uint64_t watchdog_damping_publishes =
-        watchdog_damping_publish_count_.exchange(0, std::memory_order_relaxed);
 
     uint64_t udp_rx_delta = 0;
     uint64_t udp_decoded_delta = 0;
@@ -1833,8 +1828,7 @@ class G1UdpBridge {
               << " tick_resets=" << tick_resets << " state_snapshot_overwrites=" << snapshot_overwrites
               << " state_snapshot_drops=" << snapshot_drops << " state_send_errors=" << state_send_errors
               << " stdin_button_events=" << stdin_button_events
-              << " command_timeout_events=" << command_timeout_events
-              << " watchdog_damping_publishes=" << watchdog_damping_publishes;
+              << " command_timeout_events=" << command_timeout_events;
     if (cfg_.freq.state_publish_mode == StatePublishMode::Timer) {
       std::cout << " timer_missed_periods=" << timer_missed_periods
                 << " timer_no_snapshot=" << timer_no_snapshot
@@ -1889,7 +1883,7 @@ class G1UdpBridge {
   std::thread command_watchdog_thread_;
   std::atomic<bool> command_watchdog_stop_{false};
   std::atomic<bool> low_level_active_{false};
-  std::atomic<bool> watchdog_damping_active_{false};
+  std::atomic<bool> command_timeout_active_{false};
   std::atomic<uint64_t> last_valid_command_ns_{0};
 
   std::atomic<uint64_t> lowstate_callback_count_{0};
@@ -1911,7 +1905,6 @@ class G1UdpBridge {
   std::atomic<uint64_t> timer_skipped_read_count_{0};
   std::atomic<uint64_t> stdin_button_event_count_{0};
   std::atomic<uint64_t> command_timeout_event_count_{0};
-  std::atomic<uint64_t> watchdog_damping_publish_count_{0};
   std::atomic<int64_t> latest_cmd_seq_{-1};
   std::atomic<bool> have_latest_cmd_seq_{false};
 

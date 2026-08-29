@@ -20,9 +20,9 @@ low_level:
   mode_pr: 0
   damping_kd: 8.0
   # Do not release the native motion service until a valid Python command is present.
-  # After handoff, a stale/missing command stream switches to continuous damping.
+  # After handoff, stale/missing commands are logged without changing LowCmd.
   command_timeout_s: 0.2
-  damping_publish_hz: 50.0
+  shutdown_damping_publish_hz: 50.0
   shutdown_damping_duration_s: 0.2
   wait_lowstate_timeout_s: 0.0
   release_motion_service: true
