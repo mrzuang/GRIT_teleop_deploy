@@ -14,6 +14,12 @@
 
 训练和数据生成代码不在本部署仓库的范围内。
 
+## 遥操作演示
+
+[![GRIT 遥操作演示](docs/assets/teleop-preview.png)](docs/assets/teleop.mp4)
+
+[观看遥操作演示视频（MP4）](docs/assets/teleop.mp4)
+
 ## TODO List
 
 1. **8 月 29 日：GRIT v0.0.1**：开源首版策略 checkpoint，同时发布
