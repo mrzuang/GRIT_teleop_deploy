@@ -16,7 +16,7 @@ This repository includes:
 
 Training and data-generation code are outside the scope of this repository.
 
-## Release roadmap
+## TODO List
 
 1. **August 29: GRIT v0.0.1**: Release the initial policy checkpoint, together
    with complete pipelines for sim2sim, local sim2real deployment, and VR
