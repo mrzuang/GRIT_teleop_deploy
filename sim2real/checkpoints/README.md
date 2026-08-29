@@ -11,8 +11,8 @@ checkpoints/
 SHA-256 checksums:
 
 ```text
-1f71c3d725d4d120160cdfd75e50b7da4eab2bd3b7876d7cb754d88b43b58082  policy.onnx
-c76832c018f8b6dd631dcd3baaa0511f57485c5b3e2e8c069fd9bb5c5774cdc3  policy.json
+9c741a8d6ab2b7fb044e65d522fb2d6e8ae04e54eea02858f7d44fe675b37813  policy.onnx
+17a273f2a2e9f5fc0e2a44d87329a181454c02ea56a33c3fc7e00e71ab96eb5c  policy.json
 ```
 
 The ONNX graph must expose the multi-input deployment interface used by the

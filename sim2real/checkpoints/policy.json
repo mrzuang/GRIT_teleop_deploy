@@ -1,6 +1,8 @@
 {
   "format_version": 1,
-  "algorithm": "GRIT",
+  "checkpoint": "/data/home/zhuang/rl_migrate/logs/rsl_rl/g1_tracking_temporal_recon/2026-08-29_16-58-55_job5941_m69500_root05_broad025_rootvel_footslip_nojointpos_to100k/model_71000.pt",
+  "checkpoint_sha256": "cba7110622ee855b555404251f34abb895861d1267fb860688f4ab24e571c125",
+  "motion_used_to_initialize_export_env": "/data/home/zhuang/rl_migrate/data/motion_tracks_lab_contact_z010/walk1_subject1.npz",
   "in_keys": [
     "reference_context",
     "proprio_history"
@@ -13,8 +15,18 @@
         70
       ],
       "model_fps": 30.0,
-      "reference_fps": 50.0,
-      "reference_frame_offsets": [
+      "model_frame_offsets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "motion_frame_offsets_at_50hz": [
         0,
         2,
         3,
@@ -60,6 +72,22 @@
       ]
     }
   },
+  "included_modules": [
+    "reference_encoder",
+    "history_encoder",
+    "observation_normalizer",
+    "decision_head",
+    "deterministic_action_output"
+  ],
+  "removed_training_modules": [
+    "reference_reconstruction_decoder",
+    "actor_reconstruction_decoder",
+    "privileged_reconstruction_decoder",
+    "critic",
+    "training_action_distribution_state"
+  ],
   "deployment_input_dim": 1620,
-  "onnx_sha256": "1f71c3d725d4d120160cdfd75e50b7da4eab2bd3b7876d7cb754d88b43b58082"
+  "excluded_privileged_input_dim": 211,
+  "deployment_full_actor_max_abs_error": 0.0,
+  "onnx_sha256": "9c741a8d6ab2b7fb044e65d522fb2d6e8ae04e54eea02858f7d44fe675b37813"
 }
