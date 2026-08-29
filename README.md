@@ -23,7 +23,7 @@ Training and data-generation code are outside the scope of this repository.
    teleoperation.
 2. **September: GRIT v0.0.2**: Release an updated policy checkpoint and its
    technical documentation, along with an on-device deployment pipeline,
-   hardware modification plans for the head, hands, and cameras, and a VLA data
+   hardware modification plans for the head and hands, and a VLA data
    collection pipeline.
 3. **October: GRIT v1.0.0**: Officially release the general-purpose motion
    foundation model, including a technical report (paper), an integrated
