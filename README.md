@@ -2,9 +2,10 @@
 
 [中文文档](README_ZH.md)
 
-Deployment runtime for the GRIT whole-body tracking policy on the 29-DoF
-Unitree G1. The same GRIT inference process can control either MuJoCo or the
-physical robot through a shared UDP interface.
+This repository provides Unitree G1 deployment code for GRIT v0.0.1, a
+whole-body motion-tracking control algorithm for humanoid robots. The policy
+inference process communicates through a unified UDP interface, enabling the
+robot to track an operator's full-body motion using PICO.
 
 This repository includes:
 
@@ -290,6 +291,12 @@ Build-check the native bridge:
 cd g1_sim2real
 bash scripts/build.sh
 ```
+
+## Notes
+
+The model in this release is a beta trained on only 10+ hours of open-source
+data. It can track most reference trajectories, but we recommend operating the
+robot with an overhead safety rig and exercising extreme caution.
 
 ## License
 

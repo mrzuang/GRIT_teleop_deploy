@@ -2,7 +2,8 @@
 
 [English](README.md)
 
-本仓库是面向GRIT算法的Unitree G1 摇操部署代码。策略推理进程通过统一的 UDP 接口，使用PICO即可实现机器人的全身摇操运动控制跟踪。
+本仓库是面向人形机器人全身跟踪运动控制算法GRIT v0.0.1 的Unitree G1 部署代码。策略推理进程通过统一的 UDP 接口，使用PICO即可实现人和机器人的全身运动跟踪控制。
+
 
 本仓库包含：
 
@@ -277,6 +278,10 @@ uv run python tests/test_grit_contract.py -q
 cd g1_sim2real
 bash scripts/build.sh
 ```
+
+## 说明
+
+此次发布模型为测试版模型，训练数据仅用了10+小时的开源数据，可以覆盖大部分参考轨迹，建议使用时配合吊架，务必注意安全。
 
 ## 许可证
 
