@@ -91,7 +91,7 @@ uv run src/deploy.py \
   --policy-path checkpoints/policy.onnx
 ```
 
-在 GRIT 终端按 `s`，让机器人移动到默认姿态；随后在仿真器终端按 `a`
+在仿真器终端按 `s`，让机器人移动到默认姿态；随后在仿真器终端按 `a`
 启用策略控制。按 `x` 停止仿真。
 
 `tracking.yaml` 默认循环播放 `config/g1/motions/walk_turn.npz`。可以通过
@@ -103,22 +103,6 @@ uv run src/deploy.py \
   --robot g1 \
   --motion-file /path/to/reference.npz \
   --policy-path checkpoints/policy.onnx
-```
-
-如需运行有限时长的无界面冒烟测试，分别启动以下两个进程：
-
-```bash
-# 终端 1
-cd sim2real
-uv run src/sim2sim.py \
-  --robot g1 --headless --auto-start --max-control-seconds 10
-```
-
-```bash
-# 终端 2
-cd sim2real
-uv run src/deploy.py \
-  --robot g1 --auto-start --max-policy-steps 500
 ```
 
 ## PICO 环境配置

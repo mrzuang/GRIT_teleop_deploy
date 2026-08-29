@@ -98,7 +98,7 @@ uv run src/deploy.py \
   --policy-path checkpoints/policy.onnx
 ```
 
-Press `s` in the GRIT terminal to move to the default pose. Then press `a` in
+Press `s` in the simulator terminal to move to the default pose. Then press `a` in
 the simulator terminal to enable policy control. Press `x` to stop.
 
 `tracking.yaml` loops `config/g1/motions/walk_turn.npz` by default. Override it
@@ -110,22 +110,6 @@ uv run src/deploy.py \
   --robot g1 \
   --motion-file /path/to/reference.npz \
   --policy-path checkpoints/policy.onnx
-```
-
-For a finite headless smoke run, start both processes with automatic controls:
-
-```bash
-# terminal 1
-cd sim2real
-uv run src/sim2sim.py \
-  --robot g1 --headless --auto-start --max-control-seconds 10
-```
-
-```bash
-# terminal 2
-cd sim2real
-uv run src/deploy.py \
-  --robot g1 --auto-start --max-policy-steps 500
 ```
 
 ## PICO setup
