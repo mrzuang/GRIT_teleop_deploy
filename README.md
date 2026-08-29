@@ -18,7 +18,7 @@ Training and data-generation code are outside the scope of this repository.
 
 ## Teleoperation Demo
 
-[![GRIT teleoperation demo](docs/assets/teleop-preview.png)](docs/assets/teleop.mp4)
+[![GRIT teleoperation demo](docs/assets/teleop.gif)](docs/assets/teleop.mp4)
 
 [Watch the teleoperation demo (MP4)](docs/assets/teleop.mp4)
 

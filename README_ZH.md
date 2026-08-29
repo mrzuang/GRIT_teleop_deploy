@@ -16,7 +16,7 @@
 
 ## 遥操作演示
 
-[![GRIT 遥操作演示](docs/assets/teleop-preview.png)](docs/assets/teleop.mp4)
+[![GRIT 遥操作演示](docs/assets/teleop.gif)](docs/assets/teleop.mp4)
 
 [观看遥操作演示视频（MP4）](docs/assets/teleop.mp4)
 
