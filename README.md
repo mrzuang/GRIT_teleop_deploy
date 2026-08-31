@@ -21,6 +21,15 @@ Training and data-generation code are outside the scope of this repository.
 
 ![GRIT teleoperation demo](docs/assets/teleop.gif)
 
+<p align="center">
+  <img src="docs/assets/teleop_demo_2.gif" alt="GRIT teleoperation demo 2" width="320">
+  <img src="docs/assets/teleop_demo_3.gif" alt="GRIT teleoperation demo 3" width="320">
+</p>
+<p align="center">
+  <img src="docs/assets/teleop_demo_4.gif" alt="GRIT teleoperation demo 4" width="320">
+  <img src="docs/assets/teleop_demo_5.gif" alt="GRIT teleoperation demo 5" width="320">
+</p>
+
 ## TODO List
 
 1. **August 29: GRIT v0.0.1**: Release the initial policy checkpoint, together

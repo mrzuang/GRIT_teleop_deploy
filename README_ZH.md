@@ -19,6 +19,15 @@
 
 ![GRIT 遥操作演示](docs/assets/teleop.gif)
 
+<p align="center">
+  <img src="docs/assets/teleop_demo_2.gif" alt="GRIT 遥操作演示 2" width="320">
+  <img src="docs/assets/teleop_demo_3.gif" alt="GRIT 遥操作演示 3" width="320">
+</p>
+<p align="center">
+  <img src="docs/assets/teleop_demo_4.gif" alt="GRIT 遥操作演示 4" width="320">
+  <img src="docs/assets/teleop_demo_5.gif" alt="GRIT 遥操作演示 5" width="320">
+</p>
+
 ## TODO List
 
 1. **8 月 29 日：GRIT v0.0.1**：开源首版策略 checkpoint，同时发布
