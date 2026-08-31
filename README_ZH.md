@@ -17,8 +17,6 @@
 
 ## 遥操作演示
 
-![GRIT 遥操作演示](docs/assets/teleop.gif)
-
 <p align="center">
   <img src="docs/assets/teleop_demo_2.gif" alt="GRIT 遥操作演示 2" width="320">
   <img src="docs/assets/teleop_demo_3.gif" alt="GRIT 遥操作演示 3" width="320">
