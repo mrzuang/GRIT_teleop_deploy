@@ -1,3 +1,4 @@
+import queue
 import re
 import sys
 import threading
@@ -31,8 +32,13 @@ from runtime.grit_policy import (
     GritONNXModel,
 )
 from runtime.math_utils import _slerp
-from runtime.motion_sources import MotionSourceBase, VRMotionSource, _validate_default_motion
-from deploy import Controller
+from runtime.motion_sources import (
+    LocalNpzMotionSource,
+    MotionSourceBase,
+    VRMotionSource,
+    _validate_default_motion,
+)
+from deploy import Controller, DampingRequested
 
 
 class GritContractTest(unittest.TestCase):
@@ -128,22 +134,149 @@ class GritContractTest(unittest.TestCase):
         self.assertFalse(controller.is_alive)
         self.assertEqual(calls, ["keyboard", "transport"])
 
-    def test_deploy_keyboard_s_starts_and_q_requests_emergency_exit(self):
+    def test_controller_damping_command_disables_position_control(self):
+        controller = Controller.__new__(Controller)
+        controller.cmd_q = np.ones(3, dtype=np.float32)
+        controller.cmd_qd = np.ones(3, dtype=np.float32)
+        controller.cmd_kp = np.ones(3, dtype=np.float32)
+        controller.cmd_kd = np.zeros(3, dtype=np.float32)
+        controller.cmd_enable = 1
+
+        controller.set_damping_cmd()
+
+        np.testing.assert_array_equal(controller.cmd_q, 0.0)
+        np.testing.assert_array_equal(controller.cmd_qd, 0.0)
+        np.testing.assert_array_equal(controller.cmd_kp, 0.0)
+        np.testing.assert_array_equal(controller.cmd_kd, 8.0)
+        self.assertEqual(controller.cmd_enable, 0)
+
+    def test_deploy_keyboard_s_starts_a_waits_for_default_and_q_exits(self):
         controller = Controller.__new__(Controller)
         controller._keyboard_start_event = threading.Event()
+        controller._keyboard_play_event = threading.Event()
+        controller._default_pose_ready_event = threading.Event()
+        controller._keyboard_npz_commands = queue.SimpleQueue()
+        controller._keyboard_damping_event = threading.Event()
         controller._keyboard_exit_event = threading.Event()
+        controller.current_policy = None
+        controller.policies = {
+            "tracking": SimpleNamespace(motion_source="npz")
+        }
 
         controller._on_keyboard_press("a")
         self.assertFalse(controller._keyboard_start_event.is_set())
+        self.assertFalse(controller._keyboard_play_event.is_set())
         self.assertFalse(controller._keyboard_exit_event.is_set())
 
         controller._on_keyboard_press("s")
         self.assertTrue(controller._keyboard_start_event.is_set())
 
+        controller._default_pose_ready_event.set()
+        controller._on_keyboard_press("a")
+        self.assertTrue(controller._keyboard_play_event.is_set())
+
+        controller._on_keyboard_press("x")
+        self.assertTrue(controller._keyboard_damping_event.is_set())
+        with self.assertRaises(DampingRequested):
+            controller._raise_if_keyboard_exit_requested()
+
         controller._on_keyboard_press("q")
         self.assertTrue(controller._keyboard_exit_event.is_set())
         with self.assertRaises(KeyboardInterrupt):
             controller._raise_if_keyboard_exit_requested()
+
+    def test_deploy_keyboard_s_and_a_control_active_npz_policy(self):
+        requests = []
+        controller = Controller.__new__(Controller)
+        controller._keyboard_start_event = threading.Event()
+        controller._keyboard_play_event = threading.Event()
+        controller._default_pose_ready_event = threading.Event()
+        controller._keyboard_npz_commands = queue.SimpleQueue()
+        controller._keyboard_damping_event = threading.Event()
+        controller._keyboard_exit_event = threading.Event()
+        controller.current_policy = SimpleNamespace(
+            motion_source="npz",
+            source=SimpleNamespace(
+                return_to_default=lambda: requests.append("default"),
+                play_from_start=lambda: requests.append("play"),
+            ),
+        )
+
+        controller._on_keyboard_press("s")
+        controller._on_keyboard_press("a")
+        controller._apply_keyboard_npz_request()
+        controller._on_keyboard_press("a")
+        controller._on_keyboard_press("s")
+        controller._apply_keyboard_npz_request()
+
+        self.assertFalse(controller._keyboard_start_event.is_set())
+        self.assertEqual(requests, ["play", "default"])
+
+    def test_default_qpos_state_activates_npz_policy_before_a(self):
+        events = []
+        source = SimpleNamespace(
+            play_from_start=lambda: events.append("play")
+        )
+        policy = SimpleNamespace(
+            name="tracking",
+            motion_source="npz",
+            source=source,
+            fade_in=lambda: events.append("fade_in"),
+        )
+        controller = Controller.__new__(Controller)
+        controller.args = SimpleNamespace(auto_start=False)
+        controller.policies = {"tracking": policy}
+        controller.current_policy = None
+        controller._keyboard_play_event = threading.Event()
+        controller.cmd_enable = 0
+        controller.send_cmd = lambda: events.append("send")
+
+        controller.default_qpos_state()
+
+        self.assertIs(controller.current_policy, policy)
+        self.assertEqual(events, ["fade_in", "send"])
+        self.assertEqual(controller.cmd_enable, 1)
+
+    def test_local_npz_controls_restart_and_hold_default_after_one_play(self):
+        events = []
+        source = LocalNpzMotionSource.__new__(LocalNpzMotionSource)
+        source.policy = SimpleNamespace(
+            discard_future_ref_frames=lambda: events.append("discard") or 12,
+            current_done=True,
+            current_name="default",
+        )
+        source.append_motion_from_tail = (
+            lambda name: events.append(f"append:{name}") or True
+        )
+        source.primary = "walk_turn"
+        source.loop = False
+        source.hold_default = False
+
+        source.on_fade_in()
+        self.assertEqual(events, ["append:default"])
+        self.assertTrue(source.hold_default)
+
+        self.assertTrue(source.play_from_start())
+        self.assertTrue(source.return_to_default())
+        source.post_step()
+
+        self.assertEqual(
+            events,
+            [
+                "append:default",
+                "discard",
+                "append:walk_turn",
+                "discard",
+                "append:default",
+            ],
+        )
+        self.assertTrue(source.hold_default)
+
+        source.policy.current_name = "walk_turn"
+        source.hold_default = False
+        source.post_step()
+        self.assertEqual(events[-2:], ["discard", "append:default"])
+        self.assertTrue(source.hold_default)
 
     def test_vr_fade_in_honors_controller_auto_start(self):
         for auto_start in (False, True):
@@ -451,6 +584,7 @@ class GritContractTest(unittest.TestCase):
                 path = PROJECT_ROOT / "config" / "g1" / name
                 config = yaml.safe_load(path.read_text(encoding="utf-8"))
                 self.assertEqual(config["transition_steps"], 100)
+                self.assertFalse(config["motion_source"]["npz"]["loop"])
                 policy_path = (path.parent / config["policy_path"]).resolve()
                 self.assertEqual(policy_path, PROJECT_ROOT / "checkpoints" / "policy.onnx")
                 action_names = config["action_joint_names"]

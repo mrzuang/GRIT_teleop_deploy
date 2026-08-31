@@ -18,8 +18,7 @@ motion_source:
     inflight_lifetime_steps: 0
   npz:
     primary: walk_turn
-    loop: true
-    start_at_primary: false
+    loop: false
 action_joint_names:
 - left_hip_pitch_joint
 - left_hip_roll_joint

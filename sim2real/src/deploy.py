@@ -1,4 +1,5 @@
 import os
+import queue
 import sys
 import threading
 from pathlib import Path
@@ -17,6 +18,11 @@ from runtime.policy import Policy
 from paths import SIM2REAL_ROOT, SUPPORTED_ROBOTS, controller_config_path, tracking_config_path
 
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
+
+
+class DampingRequested(Exception):
+    pass
+
 
 def get_config(policy_cfg_path: str) -> DictToClass:
     policy_cfg_path = Path(policy_cfg_path)
@@ -70,6 +76,10 @@ class Controller:
             "down": False,
         }
         self._keyboard_start_event = threading.Event()
+        self._keyboard_play_event = threading.Event()
+        self._default_pose_ready_event = threading.Event()
+        self._keyboard_npz_commands: queue.SimpleQueue[str] = queue.SimpleQueue()
+        self._keyboard_damping_event = threading.Event()
         self._keyboard_exit_event = threading.Event()
         self._keyboard_thread: Optional[threading.Thread] = None
         self.sticks = {
@@ -138,8 +148,7 @@ class Controller:
                 raise FileNotFoundError(f"Motion file not found: {motion_path}")
             tracking_cfg.motion_source["type"] = "npz"
             tracking_cfg.motion_source["npz"]["primary"] = "cli_motion"
-            tracking_cfg.motion_source["npz"]["loop"] = True
-            tracking_cfg.motion_source["npz"]["start_at_primary"] = True
+            tracking_cfg.motion_source["npz"]["loop"] = False
             tracking_cfg.motions = [
                 {
                     "name": "cli_motion",
@@ -329,15 +338,67 @@ class Controller:
             self._keyboard_exit_event.set()
             stop_listening()
             return
-        if ch != "s":
+        if ch == "x":
+            if not self._keyboard_damping_event.is_set():
+                print("[Deploy] keyboard 'x' received; damping mode requested.")
+            self._keyboard_damping_event.set()
+            stop_listening()
             return
+        if ch not in ("a", "s"):
+            return
+
+        current_policy = getattr(self, "current_policy", None)
+        if (
+            current_policy is not None
+            and getattr(current_policy, "motion_source", None) == "npz"
+        ):
+            command = "default" if ch == "s" else "play"
+            print(
+                f"[Deploy] keyboard '{ch}' received; NPZ command='{command}'."
+            )
+            self._keyboard_npz_commands.put(command)
+            return
+
+        if ch == "a":
+            tracking = getattr(self, "policies", {}).get("tracking")
+            if (
+                self._default_pose_ready_event.is_set()
+                and getattr(tracking, "motion_source", None) == "npz"
+            ):
+                print("[Deploy] keyboard 'a' received; starting NPZ playback.")
+                self._keyboard_play_event.set()
+            else:
+                print("[Deploy] keyboard 'a' ignored; press 's' first.")
+            return
+
         if not self._keyboard_start_event.is_set():
             print("[Deploy] keyboard 's' received; leaving zero torque state.")
         self._keyboard_start_event.set()
 
+    def _apply_keyboard_npz_request(self) -> None:
+        command = None
+        while True:
+            try:
+                command = self._keyboard_npz_commands.get_nowait()
+            except queue.Empty:
+                break
+        if command is None:
+            return
+
+        current_policy = self.current_policy
+        if current_policy is None or getattr(current_policy, "motion_source", None) != "npz":
+            return
+        source = getattr(current_policy, "source", None)
+        handler_name = "return_to_default" if command == "default" else "play_from_start"
+        handler = getattr(source, handler_name, None)
+        if callable(handler):
+            handler()
+
     def _raise_if_keyboard_exit_requested(self) -> None:
         if self._keyboard_exit_event.is_set():
             raise KeyboardInterrupt
+        if self._keyboard_damping_event.is_set():
+            raise DampingRequested
 
     def _keyboard_listener_loop(self) -> None:
         try:
@@ -398,12 +459,19 @@ class Controller:
             self.cmd_kp[:] = self.kps
             self.cmd_kd[:] = self.kds
             self.send_cmd()
+        self._default_pose_ready_event.set()
 
     def default_qpos_state(self):
         initial_policy: Optional[Policy] = None
+        tracking_policy = self.policies["tracking"]
+        npz_control = getattr(tracking_policy, "motion_source", None) == "npz"
+        auto_start = bool(getattr(self.args, "auto_start", False))
 
-        if bool(getattr(self.args, "auto_start", False)):
-            initial_policy = self.policies["tracking"]
+        if npz_control:
+            initial_policy = tracking_policy
+            print("NPZ tracking policy active in default pose; press 'a' to play.")
+        elif auto_start:
+            initial_policy = tracking_policy
             print(f"Auto-start initial policy: {initial_policy.name}")
         else:
             if self._uses_pico_operator_buttons():
@@ -423,13 +491,19 @@ class Controller:
                 if self.btn_rise["stop"]:
                     raise KeyboardInterrupt
 
-                if self.btn_rise["A"]:
+                if self.btn_rise["A"] or self._keyboard_play_event.is_set():
+                    self._keyboard_play_event.clear()
                     initial_policy = self.policies["tracking"]
                     print(f"Initial policy: {initial_policy.name}")
                     break
 
         self.current_policy = initial_policy
         self.current_policy.fade_in()
+        if npz_control and (auto_start or self._keyboard_play_event.is_set()):
+            self._keyboard_play_event.clear()
+            play_from_start = getattr(self.current_policy.source, "play_from_start", None)
+            if callable(play_from_start):
+                play_from_start()
         self.cmd_enable = 1
         self.send_cmd()
 
@@ -530,6 +604,7 @@ class Controller:
             if self.btn_rise["stop"]:
                 break
 
+            self._apply_keyboard_npz_request()
             self.current_policy.update_obs()
             action = self.current_policy.compute_action()
             self._apply_action(action)
@@ -593,7 +668,7 @@ if __name__ == "__main__":
         "--motion-file",
         type=Path,
         default=None,
-        help="Override the tracking motion with one local NPZ file (looped).",
+        help="Override the tracking motion with one local NPZ file (one-shot).",
     )
     parser.add_argument(
         "--publish-reference",
@@ -624,6 +699,8 @@ if __name__ == "__main__":
         controller.run()
     except KeyboardInterrupt:
         print("Keyboard interrupt received. Exiting...")
+    except DampingRequested:
+        print("Damping requested from keyboard. Entering damping mode...")
     except Exception as e:
         print(f"An exception occurred: {e}")
         traceback.print_exc()

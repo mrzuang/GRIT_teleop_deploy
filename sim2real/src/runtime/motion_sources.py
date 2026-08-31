@@ -262,13 +262,13 @@ class MotionSourceBase(ABC):
 
 
 class LocalNpzMotionSource(MotionSourceBase):
-    """Loop a local GRIT reference motion for sim2sim validation."""
+    """Play a local GRIT reference motion with keyboard restart controls."""
 
     def __init__(self, policy: "ReferenceTrackingPolicy", policy_cfg: DictToClass):
         npz_cfg = getattr(policy_cfg, "motion_source")["npz"]
         self.primary = str(npz_cfg.get("primary", ""))
-        self.loop = bool(npz_cfg.get("loop", True))
-        self.start_at_primary = bool(npz_cfg.get("start_at_primary", False))
+        self.loop = bool(npz_cfg.get("loop", False))
+        self.hold_default = False
         super().__init__(policy, policy_cfg)
         if not self.primary:
             names = [n for n in self.motions if n != "default"]
@@ -281,21 +281,47 @@ class LocalNpzMotionSource(MotionSourceBase):
             raise ValueError(f"[LocalNpzMotionSource] unknown primary motion '{self.primary}'")
         print(
             f"[LocalNpzMotionSource] primary='{self.primary}' loop={self.loop} "
-            f"start_at_primary={self.start_at_primary} "
             f"transition_steps={self.policy.transition_steps}"
         )
 
     def on_fade_in(self):
-        if self.start_at_primary:
-            self.append_motion_from_tail(self.primary)
-        else:
-            self.append_motion_from_tail("default")
+        self.hold_default = True
+        self.append_motion_from_tail("default")
+
+    def play_from_start(self) -> bool:
+        discarded = self.policy.discard_future_ref_frames()
+        self.hold_default = False
+        appended = self.append_motion_from_tail(self.primary)
+        if appended:
+            print(
+                f"[LocalNpzMotionSource] Playing '{self.primary}' from start "
+                f"(discarded_future_frames={discarded})"
+            )
+        return appended
+
+    def return_to_default(self) -> bool:
+        discarded = self.policy.discard_future_ref_frames()
+        self.hold_default = True
+        appended = self.append_motion_from_tail("default")
+        if appended:
+            print(
+                "[LocalNpzMotionSource] Returning to default pose "
+                f"(discarded_future_frames={discarded})"
+            )
+        return appended
 
     def post_step(self):
         if not self.policy.current_done:
             return
-        if self.policy.current_name == "default" or (self.loop and self.policy.current_name == self.primary):
+        if self.policy.current_name == "default":
+            if self.hold_default:
+                return
             self.append_motion_from_tail(self.primary)
+        elif self.policy.current_name == self.primary:
+            if self.loop:
+                self.play_from_start()
+            else:
+                self.return_to_default()
 
 
 class UDPMotionSource(MotionSourceBase):

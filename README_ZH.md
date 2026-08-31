@@ -98,10 +98,11 @@ uv run src/deploy.py \
   --policy-path checkpoints/policy.onnx
 ```
 
-在仿真器终端按 `s`，让机器人移动到默认姿态；随后在仿真器终端按 `a`
-启用策略控制。按 `x` 停止仿真。
+在 GRIT 终端（终端 2）按 `s` 进入运控默认站姿，再在同一终端按 `a`，从
+第一帧开始播放 NPZ 轨迹。完成站姿过渡后，跟踪策略已经启用并持续控制默认
+站姿，无需先按 `a` 才获得策略支撑。在仿真器终端按 `x` 可停止仿真。
 
-`tracking.yaml` 默认循环播放 `config/g1/motions/walk_turn.npz`。可以通过
+`tracking.yaml` 默认单次播放 `config/g1/motions/walk_turn.npz`。可以通过
 以下参数换成其他符合 GRIT 契约的参考动作：
 
 ```bash
@@ -111,6 +112,16 @@ uv run src/deploy.py \
   --motion-file /path/to/reference.npz \
   --policy-path checkpoints/policy.onnx
 ```
+
+MuJoCo 和 G1 真机使用本地 NPZ 运控时，都可随时在 GRIT 终端按 `s`，丢弃
+尚未执行的轨迹并进入运控默认站姿；随时按 `a`，都会从第一帧重新播放 NPZ
+轨迹。轨迹完整播放一遍后，机器人会自动返回并保持运控默认站姿。姿态过渡
+时长由 `transition_steps` 控制。
+
+任意时刻在 GRIT 终端按 `x`，都会停止当前控制流程、发送阻尼指令
+（`Kp=0`、`Kd=8`、`enable=0`），然后退出 GRIT 进程。该操作在零力矩阶段、
+站姿过渡阶段、默认站姿运控和 NPZ 播放期间均有效。它与仿真器终端的 `x`
+相互独立；后者用于停止仿真。
 
 ## PICO 环境配置
 
@@ -226,7 +237,8 @@ taskset -c 4-7 uv run src/deploy.py \
 只有在 GRIT 进程报告已收到有效机器人状态后，才能按 `s`。解除物理支撑
 前，必须检查关节顺序、控制增益、默认姿态、网络接口和模型哈希。
 
-在终端 3 按 `q` 可紧急退出 GRIT 运控程序；在终端 2 按 `q` 可紧急退出
+在终端 3 按 `x` 可进入阻尼模式并退出 GRIT 运控程序。在终端 3 按 `q` 可
+紧急退出 GRIT 运控程序；在终端 2 按 `q` 可紧急退出
 原生桥接器及其低层运控循环。该键盘操作独立于 PICO 指令，不能替代机器人
 的物理急停。
 

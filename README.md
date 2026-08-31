@@ -105,10 +105,12 @@ uv run src/deploy.py \
   --policy-path checkpoints/policy.onnx
 ```
 
-Press `s` in the simulator terminal to move to the default pose. Then press `a` in
-the simulator terminal to enable policy control. Press `x` to stop.
+Press `s` in the GRIT terminal (terminal 2) to enter the controlled default
+standing pose. The tracking policy is active and holding this pose immediately
+after the transition. Then press `a` there to start the NPZ trajectory from its
+first frame. Press `x` in the simulator terminal to stop the simulation.
 
-`tracking.yaml` loops `config/g1/motions/walk_turn.npz` by default. Override it
+`tracking.yaml` plays `config/g1/motions/walk_turn.npz` once by default. Override it
 with another GRIT-compatible reference:
 
 ```bash
@@ -118,6 +120,18 @@ uv run src/deploy.py \
   --motion-file /path/to/reference.npz \
   --policy-path checkpoints/policy.onnx
 ```
+
+For both MuJoCo and G1 hardware local NPZ control, press `s` in the GRIT terminal
+at any time to discard the queued trajectory and transition to the controlled
+default standing pose. Press `a` at any time to restart the NPZ trajectory from
+its first frame. After one complete playback, the robot automatically returns to
+and holds the default standing pose. Pose transitions use `transition_steps`.
+
+Press `x` in the GRIT terminal at any time to stop the current control flow,
+send a damping command (`Kp=0`, `Kd=8`, `enable=0`), and exit the GRIT process.
+This works during zero torque, the transition to standing, default-pose control,
+and NPZ playback. It is separate from `x` in the simulator terminal, which stops
+the simulation.
 
 ## PICO setup
 
@@ -238,7 +252,8 @@ Press `s` only after the GRIT process reports valid robot state. Verify the
 joint order, gains, default pose, network interface, and model hash before
 releasing physical support.
 
-Press `q` in terminal 3 to emergency-exit the GRIT control process, or in
+Press `x` in terminal 3 to enter damping mode and exit GRIT control. Press `q`
+in terminal 3 to emergency-exit the GRIT control process, or in
 terminal 2 to emergency-exit the native bridge and its low-level control loop.
 This keyboard action is separate from the PICO controls and does not replace
 the robot's physical emergency stop.

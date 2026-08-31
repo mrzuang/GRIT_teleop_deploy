@@ -18,8 +18,7 @@ motion_source:
     inflight_lifetime_steps: 0
   npz:
     primary: walk_turn
-    loop: true
-    start_at_primary: true
+    loop: false
 motions:
 - name: walk_turn
   path: motions/walk_turn.npz
