@@ -319,6 +319,9 @@ stop available throughout operation.
 Press `x` in terminal 3 to enter damping mode and exit GRIT control. Press `q`
 in terminal 3 to emergency-exit the GRIT control process, or in
 terminal 2 to emergency-exit the native bridge and its low-level control loop.
+The bridge also accepts `q` while it is still waiting for its first DDS
+`LowState`, so a disconnected or misconfigured robot interface does not trap
+the process during startup.
 This keyboard action is separate from the PICO controls and does not replace
 the robot's physical emergency stop.
 

@@ -902,6 +902,9 @@ class G1UdpBridge {
     }
 
     wait_for_lowstate();
+    if (g_stop_requested.load(std::memory_order_relaxed)) {
+      return;
+    }
     start_state_sender_thread();
 
     command_receiver_.reset(new UdpLatestReceiver(
@@ -939,6 +942,9 @@ class G1UdpBridge {
 
   void activate_low_level()
   {
+    if (g_stop_requested.load(std::memory_order_relaxed)) {
+      return;
+    }
     wait_for_initial_command();
     release_motion_service();
 
@@ -971,6 +977,7 @@ class G1UdpBridge {
     if (closed_.exchange(true)) {
       return;
     }
+    std::cout << "[G1Bridge] Shutdown started" << std::endl;
     if (command_receiver_) {
       command_receiver_->close();
     }
@@ -985,6 +992,7 @@ class G1UdpBridge {
     state_sender_.close();
     lowcmd_publisher_.reset();
     unitree::robot::ChannelFactory::Instance()->Release();
+    std::cout << "[G1Bridge] Shutdown complete" << std::endl;
   }
 
  private:
@@ -1052,13 +1060,44 @@ class G1UdpBridge {
 
   void wait_for_lowstate()
   {
+    ScopedTerminalRawMode raw_mode(STDIN_FILENO);
+    std::cout << "[G1Bridge] Waiting for DDS lowstate; press q to exit"
+              << (raw_mode.enabled() ? " (single-key tty mode)" : " (line-buffered/pipe mode)") << std::endl;
     if (cfg_.freq.state_publish_mode == StatePublishMode::Timer) {
       wait_for_lowstate_reader();
     } else {
       wait_for_lowstate_callback();
     }
+    if (g_stop_requested.load(std::memory_order_relaxed)) {
+      return;
+    }
     std::cout << "[G1Bridge] Successfully connected to DDS lowstate, mode_machine="
               << static_cast<int>(mode_machine_.load()) << std::endl;
+  }
+
+  void poll_startup_exit_key()
+  {
+    pollfd pfd{};
+    pfd.fd = STDIN_FILENO;
+    pfd.events = POLLIN;
+    const int ready = ::poll(&pfd, 1, 0);
+    if (ready <= 0 || (pfd.revents & POLLIN) == 0) {
+      return;
+    }
+
+    char buffer[64];
+    const ssize_t n = ::read(STDIN_FILENO, buffer, sizeof(buffer));
+    if (n <= 0) {
+      return;
+    }
+    for (ssize_t i = 0; i < n; ++i) {
+      const char ch = static_cast<char>(std::tolower(static_cast<unsigned char>(buffer[i])));
+      if (ch == 'q') {
+        std::cerr << "[G1Bridge] Exit requested while waiting for DDS lowstate" << std::endl;
+        g_stop_requested.store(true, std::memory_order_relaxed);
+        return;
+      }
+    }
   }
 
   void wait_for_lowstate_callback()
@@ -1067,18 +1106,20 @@ class G1UdpBridge {
     const auto ready = [this]() { return have_lowstate_.load(); };
     if (cfg_.low_level.wait_lowstate_timeout_s <= 0.0) {
       while (!ready()) {
+        poll_startup_exit_key();
         if (g_stop_requested.load()) {
-          throw std::runtime_error("Interrupted while waiting for first valid DDS lowstate");
+          return;
         }
         first_state_cv_.wait_for(lock, std::chrono::milliseconds(100));
       }
     } else {
       const auto deadline = SteadyClock::now() + std::chrono::duration<double>(cfg_.low_level.wait_lowstate_timeout_s);
       while (!ready()) {
+        poll_startup_exit_key();
         if (g_stop_requested.load()) {
-          throw std::runtime_error("Interrupted while waiting for first valid DDS lowstate");
+          return;
         }
-        if (first_state_cv_.wait_until(lock, deadline, ready)) {
+        if (first_state_cv_.wait_for(lock, std::chrono::milliseconds(100), ready)) {
           break;
         }
         if (SteadyClock::now() >= deadline) {
@@ -1092,6 +1133,10 @@ class G1UdpBridge {
   {
     const auto start = SteadyClock::now();
     while (!g_stop_requested.load()) {
+      poll_startup_exit_key();
+      if (g_stop_requested.load(std::memory_order_relaxed)) {
+        return;
+      }
       if (poll_lowstate_reader(/*allow_publish=*/false)) {
         return;
       }
@@ -1103,7 +1148,6 @@ class G1UdpBridge {
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    throw std::runtime_error("Interrupted while waiting for first valid DDS lowstate");
   }
 
   struct TickDecision {
