@@ -17,6 +17,12 @@ This repository includes:
 
 Training and data-generation code are outside the scope of this repository.
 
+## Trajectory Tracking Generalization Demo
+
+<p align="center">
+  <img src="docs/assets/trajectory_tracking_generalization.gif" alt="GRIT trajectory tracking generalization demo" width="480">
+</p>
+
 ## Teleoperation Demo
 
 <p align="center">

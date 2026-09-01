@@ -15,6 +15,12 @@
 
 训练和数据生成代码不在本部署仓库的范围内。
 
+## 轨迹跟踪泛化演示
+
+<p align="center">
+  <img src="docs/assets/trajectory_tracking_generalization.gif" alt="GRIT 轨迹跟踪泛化演示" width="480">
+</p>
+
 ## 遥操作演示
 
 <p align="center">
