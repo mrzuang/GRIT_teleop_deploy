@@ -121,17 +121,15 @@ uv run src/deploy.py \
   --policy-path checkpoints/policy.onnx
 ```
 
-For both MuJoCo and G1 hardware local NPZ control, press `s` in the GRIT terminal
-at any time to discard the queued trajectory and transition to the controlled
-default standing pose. Press `a` at any time to restart the NPZ trajectory from
-its first frame. After one complete playback, the robot automatically returns to
-and holds the default standing pose. Pose transitions use `transition_steps`.
+| GRIT terminal key | MuJoCo NPZ behavior |
+| --- | --- |
+| `s` | Discard the queued trajectory and enter the controlled default pose |
+| `a` | Play or restart the NPZ trajectory from frame 0 |
+| `x` | Send damping (`Kp=0`, `Kd=8`, `enable=0`) and exit GRIT |
 
-Press `x` in the GRIT terminal at any time to stop the current control flow,
-send a damping command (`Kp=0`, `Kd=8`, `enable=0`), and exit the GRIT process.
-This works during zero torque, the transition to standing, default-pose control,
-and NPZ playback. It is separate from `x` in the simulator terminal, which stops
-the simulation.
+After one complete playback, GRIT automatically returns to and holds the default
+pose. Pose transitions use `transition_steps`. The simulator terminal has its
+own `x` key, which stops MuJoCo rather than the GRIT process.
 
 ## PICO setup
 
@@ -215,8 +213,24 @@ Press `s` in terminal 3 before activating live control.
 
 ## G1 hardware deployment
 
-First validate the exact model, configuration, and PICO flow in MuJoCo. Build
-the native bridge once:
+G1 hardware supports two separate workflows: local NPZ playback and PICO live
+control. Do not mix their tracking configurations or startup sequences.
+
+### Safety requirements
+
+Before either workflow:
+
+- validate the exact model, configuration, and NPZ/PICO input in MuJoCo;
+- secure or suspend the robot for initial runs and keep physical support until
+  the default pose and first motion have been verified;
+- maintain a clear radius of at least **3 m around the robot**, with no people,
+  obstacles, loose cables, steps, or fragile equipment inside that area;
+- keep a trained operator at the physical emergency stop, positioned outside
+  the expected motion path, and do not rely on keyboard or software stop logic;
+- verify the joint order, gains, default pose, network interface, model hash,
+  battery state, and available floor traction before enabling control.
+
+Build the native bridge once:
 
 ```bash
 cd g1_sim2real
@@ -224,8 +238,52 @@ bash scripts/build.sh
 cd ..
 ```
 
-Secure or suspend the robot, keep an operator at the emergency stop, and replace
-`enp129s0` below with the interface connected to the G1.
+Replace `enp129s0` in the commands below with the workstation interface connected
+to the G1. If a listed CPU ID is unavailable, omit the corresponding `taskset`
+prefix.
+
+### Local NPZ playback
+
+Validate the exact NPZ in MuJoCo first. Then start the native bridge in terminal
+1:
+
+```bash
+cd g1_sim2real
+G1_NET=enp129s0 taskset -c 2-3 bash scripts/run_bridge.sh
+```
+
+Start GRIT local NPZ control in terminal 2:
+
+```bash
+cd sim2real
+taskset -c 4-7 uv run src/deploy.py \
+  --robot g1 \
+  --tracking-config tracking.yaml \
+  --motion-file config/g1/motions/walk_turn.npz \
+  --policy-path checkpoints/policy.onnx
+```
+
+Only after GRIT reports valid robot state, press `s` in terminal 2 to enter the
+controlled default pose. Keep the robot physically supported during this
+transition. While the default pose is held, the reference heading follows the
+measured pelvis yaw, so the operator can reposition and reorient the supported
+robot. Press `a` to capture the latest heading and play the NPZ from frame 0.
+
+| GRIT terminal key | G1 local NPZ behavior |
+| --- | --- |
+| `s` | Cancel playback and return to the controlled default pose |
+| `a` | Capture the current heading and play/restart from frame 0 |
+| `x` | Send damping and exit the GRIT process |
+| `q` | Emergency-exit the GRIT process |
+
+After the NPZ completes, GRIT automatically returns to the adjustable default
+pose. After stopping GRIT with `x`, press `q` in terminal 1 to stop the native
+bridge and its low-level loop.
+
+### PICO live control
+
+Start the following three processes after completing the PICO setup and MuJoCo
+validation:
 
 ```bash
 # terminal 1: PICO retargeting
@@ -248,9 +306,9 @@ taskset -c 4-7 uv run src/deploy.py \
   --policy-path checkpoints/policy.onnx
 ```
 
-Press `s` only after the GRIT process reports valid robot state. Verify the
-joint order, gains, default pose, network interface, and model hash before
-releasing physical support.
+Press `s` in terminal 3 only after GRIT reports valid robot state. Then use the
+PICO controls documented above. Keep the 3 m clear radius and physical emergency
+stop available throughout operation.
 
 Press `x` in terminal 3 to enter damping mode and exit GRIT control. Press `q`
 in terminal 3 to emergency-exit the GRIT control process, or in
