@@ -28,10 +28,11 @@ from runtime.grit_observation import (
 from runtime.grit_policy import (
     GRIT_ACTION_JOINT_NAMES,
     GRIT_ACTION_SCALE_BY_NAME,
+    GritNpzMotionSource,
     GritPolicy,
     GritONNXModel,
 )
-from runtime.math_utils import _slerp
+from runtime.math_utils import _slerp, _yaw_component_wxyz
 from runtime.motion_sources import (
     LocalNpzMotionSource,
     MotionSourceBase,
@@ -277,6 +278,76 @@ class GritContractTest(unittest.TestCase):
         source.post_step()
         self.assertEqual(events[-2:], ["discard", "append:default"])
         self.assertTrue(source.hold_default)
+
+    def test_grit_npz_default_hold_follows_robot_yaw_and_preserves_tilt(self):
+        joint_names = [f"joint_{i}" for i in range(29)]
+        ref_rotation = R.from_euler("zyx", [0.2, -0.08, 0.05])
+        robot_rotation = R.from_euler("z", 1.1)
+        ref_quat = ref_rotation.as_quat(scalar_first=True).astype(np.float32)
+        robot_quat = robot_rotation.as_quat(scalar_first=True).astype(np.float32)
+
+        policy = SimpleNamespace(
+            current_name="default",
+            current_done=True,
+            ref_idx=0,
+            ref_len=1,
+            ref_joint_pos=np.zeros((1, 29), dtype=np.float32),
+            ref_root_pos=np.array([[0.0, 0.0, 0.78]], dtype=np.float32),
+            ref_root_quat=ref_quat.reshape(1, 4).copy(),
+            grit_ref_features=np.zeros((1, GRIT_FEATURE_DIM), dtype=np.float32),
+            obs_joint_names=joint_names,
+            reference_joint_names=joint_names,
+            controller=SimpleNamespace(quat=robot_quat),
+        )
+        source = GritNpzMotionSource.__new__(GritNpzMotionSource)
+        source.policy = policy
+        source.config = SimpleNamespace(reference_fps=50.0)
+        source.hold_default = True
+
+        source._follow_robot_yaw_while_holding_default()
+
+        aligned = R.from_quat(policy.ref_root_quat[0], scalar_first=True)
+        aligned_yaw = R.from_quat(
+            _yaw_component_wxyz(policy.ref_root_quat[0]), scalar_first=True
+        )
+        original_yaw = R.from_quat(
+            _yaw_component_wxyz(ref_quat), scalar_first=True
+        )
+        relative_tilt = original_yaw.inv() * ref_rotation
+
+        np.testing.assert_allclose(
+            (robot_rotation.inv() * aligned_yaw).as_rotvec(), 0.0, atol=1e-6
+        )
+        np.testing.assert_allclose(
+            (relative_tilt.inv() * (aligned_yaw.inv() * aligned)).as_rotvec(),
+            0.0,
+            atol=1e-6,
+        )
+        np.testing.assert_allclose(
+            policy.grit_ref_features[0, 58:64],
+            aligned.as_matrix()[:, :2].reshape(-1),
+            atol=1e-6,
+        )
+
+    def test_grit_npz_default_yaw_is_frozen_when_playback_starts(self):
+        events = []
+        source = GritNpzMotionSource.__new__(GritNpzMotionSource)
+        source.policy = SimpleNamespace(
+            discard_future_ref_frames=lambda: events.append("discard") or 0,
+        )
+        source.primary = "motion"
+        source.hold_default = True
+        source._follow_robot_yaw_while_holding_default = (
+            lambda: events.append("sync_yaw")
+        )
+        source.append_motion_from_tail = (
+            lambda name: events.append(f"append:{name}") or True
+        )
+
+        self.assertTrue(source.play_from_start())
+
+        self.assertEqual(events, ["sync_yaw", "discard", "append:motion"])
+        self.assertFalse(source.hold_default)
 
     def test_vr_fade_in_honors_controller_auto_start(self):
         for auto_start in (False, True):

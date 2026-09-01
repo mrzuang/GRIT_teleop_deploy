@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Dict, Optional
 
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 from common.joint_mapper import JointMapper
 from common.utils import DictToClass
@@ -15,6 +16,7 @@ from runtime.motion_sources import (
 )
 from runtime.observation import Observation
 from runtime.policy import ONNXRuntimeModel, ReferenceTrackingPolicy
+from runtime.math_utils import _yaw_component_wxyz
 from runtime.grit_observation import (
     GRIT_CONTEXT_FRAMES,
     GRIT_FEATURE_DIM,
@@ -321,6 +323,62 @@ class GritPolicy(ReferenceTrackingPolicy):
 
 class GritNpzMotionSource(LocalNpzMotionSource):
     """Preserve exported velocity channels for local GRIT motion clips."""
+
+    def _follow_robot_yaw_while_holding_default(self) -> None:
+        """Release default-pose yaw while retaining roll/pitch stabilization."""
+        policy = self.policy
+        if (
+            not self.hold_default
+            or policy.current_name != "default"
+            or not policy.current_done
+            or policy.ref_root_quat is None
+            or policy.ref_root_pos is None
+            or policy.ref_joint_pos is None
+            or policy.grit_ref_features is None
+            or policy.ref_len <= 0
+        ):
+            return
+
+        idx = min(int(policy.ref_idx), int(policy.ref_len) - 1)
+        ref_quat = policy.ref_root_quat[idx]
+        robot_quat = np.asarray(policy.controller.quat, dtype=np.float32)
+
+        ref_rotation = R.from_quat(ref_quat, scalar_first=True)
+        ref_yaw = R.from_quat(_yaw_component_wxyz(ref_quat), scalar_first=True)
+        robot_yaw = R.from_quat(
+            _yaw_component_wxyz(robot_quat), scalar_first=True
+        )
+        ref_tilt = ref_yaw.inv() * ref_rotation
+        aligned_quat = (robot_yaw * ref_tilt).as_quat(scalar_first=True)
+
+        # Keep quaternion signs continuous so the reference does not jump
+        # between equivalent q and -q representations while being rotated.
+        if float(np.dot(aligned_quat, ref_quat)) < 0.0:
+            aligned_quat = -aligned_quat
+        policy.ref_root_quat[idx] = aligned_quat.astype(np.float32)
+
+        joint_pos = remap_joint_array_by_names(
+            policy.ref_joint_pos[idx : idx + 1],
+            policy.obs_joint_names,
+            policy.reference_joint_names,
+        )
+        feature = build_grit_reference_features(
+            joint_pos,
+            policy.ref_root_pos[idx : idx + 1],
+            policy.ref_root_quat[idx : idx + 1],
+            fps=float(getattr(self.config, "reference_fps", 50.0)),
+        )
+        policy.grit_ref_features[idx] = feature[0]
+
+    def play_from_start(self) -> bool:
+        # Capture the latest manually adjusted heading before freezing the
+        # anchor used to align the complete NPZ trajectory.
+        self._follow_robot_yaw_while_holding_default()
+        return super().play_from_start()
+
+    def post_step(self):
+        super().post_step()
+        self._follow_robot_yaw_while_holding_default()
 
     def append_motion_from_tail(self, name: str) -> bool:
         if name not in self.motions:
