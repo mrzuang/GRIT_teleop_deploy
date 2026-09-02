@@ -4,6 +4,11 @@
 
 本仓库是面向人形机器人全身跟踪运动控制算法GRIT v0.0.1 的Unitree G1 部署代码。策略推理进程通过统一的 UDP 接口，使用PICO即可实现人和机器人的全身运动跟踪控制。
 
+> **致谢：** 本仓库的部分部署实现参考并改写自
+> [`Axellwppr/motion_tracking` 的 `sim2real` 分支](https://github.com/Axellwppr/motion_tracking/tree/sim2real)。
+> 上游项目版权声明为 Copyright (c) 2026 Axell，并采用
+> [MIT License](https://github.com/Axellwppr/motion_tracking/blob/sim2real/LICENSE)。
+> 感谢原作者及贡献者公开相关实现。
 
 本仓库包含：
 

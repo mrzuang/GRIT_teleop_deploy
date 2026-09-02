@@ -7,6 +7,14 @@ whole-body motion-tracking control algorithm for humanoid robots. The policy
 inference process communicates through a unified UDP interface, enabling the
 robot to track an operator's full-body motion using PICO.
 
+> **Acknowledgment:** Parts of this deployment implementation were developed
+> with reference to and adapted from the
+> [`sim2real` branch of `Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real).
+> The upstream project is Copyright (c) 2026 Axell and is distributed under the
+> [MIT License](https://github.com/Axellwppr/motion_tracking/blob/sim2real/LICENSE).
+> We thank the original author and contributors for making their implementation
+> publicly available.
+
 This repository includes:
 
 - the GRIT ONNX policy and its deployment contract
