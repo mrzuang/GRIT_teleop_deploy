@@ -4,12 +4,6 @@
 
 本仓库是面向人形机器人全身跟踪运动控制算法GRIT v0.0.1 的Unitree G1 部署代码。策略推理进程通过统一的 UDP 接口，使用PICO即可实现人和机器人的全身运动跟踪控制。
 
-> **致谢：** 本仓库的部分部署实现参考并改写自
-> [`Axellwppr/motion_tracking` 的 `sim2real` 分支](https://github.com/Axellwppr/motion_tracking/tree/sim2real)。
-> 上游项目版权声明为 Copyright (c) 2026 Axell，并采用
-> [MIT License](https://github.com/Axellwppr/motion_tracking/blob/sim2real/LICENSE)。
-> 感谢原作者及贡献者公开相关实现。
-
 本仓库包含：
 
 - GRIT ONNX 策略及其配置文件
@@ -69,8 +63,7 @@
 │   ├── teleop/                      # XR 数据流、G1 重定向和 8080 Web viewer
 │   └── tests/test_grit_contract.py
 ├── g1_sim2real/                     # Unitree SDK2 原生硬件桥接器
-├── THIRD_PARTY.md
-└── LICENSE
+└── THIRD_PARTY.md
 ```
 
 ## 环境要求
@@ -359,10 +352,10 @@ bash scripts/build.sh
 
 此次发布模型为测试版模型，训练数据仅用了10+小时的开源数据，可以覆盖大部分参考轨迹，建议使用时配合吊架，务必注意安全。
 
-## 许可证
+## 致谢
 
-本仓库中的 GRIT 原创部署代码采用 MIT License。参考并改写自
-[`Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real)
-的部分保留 Copyright (c) 2026 Axell，并继续遵循上游 MIT License。仓库内的
-第三方依赖、机器人资产和 XRoboToolkit 组件保留各自的许可条款，详见
-`THIRD_PARTY.md`。
+本仓库的部分部署实现参考并改写自
+[`Axellwppr/motion_tracking` 的 `sim2real` 分支](https://github.com/Axellwppr/motion_tracking/tree/sim2real)。
+上游项目版权声明为 Copyright (c) 2026 Axell，并采用
+[MIT License](https://github.com/Axellwppr/motion_tracking/blob/sim2real/LICENSE)。
+感谢原作者及贡献者公开相关实现。

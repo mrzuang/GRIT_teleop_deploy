@@ -7,14 +7,6 @@ whole-body motion-tracking control algorithm for humanoid robots. The policy
 inference process communicates through a unified UDP interface, enabling the
 robot to track an operator's full-body motion using PICO.
 
-> **Acknowledgment:** Parts of this deployment implementation were developed
-> with reference to and adapted from the
-> [`sim2real` branch of `Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real).
-> The upstream project is Copyright (c) 2026 Axell and is distributed under the
-> [MIT License](https://github.com/Axellwppr/motion_tracking/blob/sim2real/LICENSE).
-> We thank the original author and contributors for making their implementation
-> publicly available.
-
 This repository includes:
 
 - the GRIT ONNX policy and its deployment contract
@@ -78,8 +70,7 @@ Training and data-generation code are outside the scope of this repository.
 │   ├── teleop/                      # XR stream, G1 retargeting, and port-8080 viewer
 │   └── tests/test_grit_contract.py
 ├── g1_sim2real/                     # native Unitree SDK2 bridge
-├── THIRD_PARTY.md
-└── LICENSE
+└── THIRD_PARTY.md
 ```
 
 ## Requirements
@@ -386,12 +377,12 @@ The model in this release is a beta trained on only 10+ hours of open-source
 data. It can track most reference trajectories, but we recommend operating the
 robot with an overhead safety rig and exercising extreme caution.
 
-## License
+## Acknowledgment
 
-Original GRIT deployment code in this repository is released under the MIT
-License. Portions adapted from
-[`Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real)
-retain the upstream Copyright (c) 2026 Axell notice and remain subject to its
-MIT License.
-Vendored dependencies, robot assets, and XRoboToolkit components retain their
-own terms; see `THIRD_PARTY.md`.
+Parts of this deployment implementation were developed with reference to and
+adapted from the
+[`sim2real` branch of `Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real).
+The upstream project is Copyright (c) 2026 Axell and is distributed under the
+[MIT License](https://github.com/Axellwppr/motion_tracking/blob/sim2real/LICENSE).
+We thank the original author and contributors for making their implementation
+publicly available.
