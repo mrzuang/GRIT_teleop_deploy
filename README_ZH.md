@@ -361,5 +361,8 @@ bash scripts/build.sh
 
 ## 许可证
 
-GRIT 部署代码采用 MIT License。仓库内的第三方依赖、机器人资产和
-XRoboToolkit 组件保留各自的许可条款，详见 `THIRD_PARTY.md`。
+本仓库中的 GRIT 原创部署代码采用 MIT License。参考并改写自
+[`Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real)
+的部分保留 Copyright (c) 2026 Axell，并继续遵循上游 MIT License。仓库内的
+第三方依赖、机器人资产和 XRoboToolkit 组件保留各自的许可条款，详见
+`THIRD_PARTY.md`。

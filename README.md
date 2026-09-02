@@ -388,6 +388,10 @@ robot with an overhead safety rig and exercising extreme caution.
 
 ## License
 
-GRIT deployment code is released under the MIT License. Vendored dependencies,
-robot assets, and XRoboToolkit components retain their own terms; see
-`THIRD_PARTY.md`.
+Original GRIT deployment code in this repository is released under the MIT
+License. Portions adapted from
+[`Axellwppr/motion_tracking`](https://github.com/Axellwppr/motion_tracking/tree/sim2real)
+retain the upstream Copyright (c) 2026 Axell notice and remain subject to its
+MIT License.
+Vendored dependencies, robot assets, and XRoboToolkit components retain their
+own terms; see `THIRD_PARTY.md`.
