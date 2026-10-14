@@ -3,9 +3,10 @@
 Static browser demo for [GRIT](https://github.com/mrzuang/GRIT_teleop_deploy). Open `index.html` through HTTP(S); `demo.html` provides the same interface.
 
 - MuJoCo 3.12 WASM and the original GRIT model_99000 ONNX run entirely in the browser.
-- AI fighting: different warmups, then approach; 30% guard / 35% kick / 35% punch selection, opponent-facing ground motions and calibrated kick windup/spacing, physical hit feedback, knockdown or 60-second points decision.
-- Single-robot stage: 39 curated actions with previous/next and direct selection.
-- Enter starts/pauses, Space resets positions, R resets the round, P selects AI fighting, V selects the showcase, and M toggles audio.
+- AI fighting: different warmups, then approach; 20% guard / 40% kick / 40% punch selection, opponent-facing ground motions and calibrated kick windup/spacing, physical hit feedback, knockdown or 60-second points decision.
+- Manual fighting: C takes over red while blue remains AI. WASD moves, Q/E turns, F faces the opponent; J/K/L punches, hold H to guard, U/I/O kicks, Y taunts, B warms up. Complete keyboard guide is at the bottom right. Manual kicks allow misses; buffered attacks follow the landing.
+- Single-robot stage: 37 curated actions (turning back kick and spinning kick removed) with previous/next and direct selection.
+- Enter starts/pauses, Space resets positions, R resets the round, C selects manual fighting, P selects AI fighting, V selects the showcase, and M toggles audio.
 
 The default site address after Pages is enabled is https://mrzuang.github.io/GRIT_teleop_deploy/ .
 

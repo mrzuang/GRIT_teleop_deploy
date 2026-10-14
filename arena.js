@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 
 const elements=new Map(),$=id=>{if(!elements.has(id))elements.set(id,document.getElementById(id));return elements.get(id);};
-const held=new Set(),actionKeys=new Set(),uiValues=new Map();
+const held=new Set(),actionKeys=new Set('W S A D Q E J K L H U I O Y B'.split(' ')),uiValues=new Map();
 function setText(id,value){const key=id+':text';if(uiValues.get(key)!==value){$(id).textContent=value;uiValues.set(key,value);}}
 function setHTML(id,value){const key=id+':html';if(uiValues.get(key)!==value){$(id).innerHTML=value;uiValues.set(key,value);}}
 let socket, frame=null, round=null, loadingRound=null, loadedRound=null, canControl=false, inputSeq=0;
@@ -90,6 +90,7 @@ async function loadScene(packet){
     loadedRound=packet.round_index;poseTime=-1;acceptPoses(frame.poses,true,frame.time);$('loading').hidden=true;
     $('start').disabled=!canControl||!!frame.result;
     $('mode').disabled=!canControl;
+    $('manual').disabled=!canControl;
     $('showcase').disabled=!canControl;
     $('reposition').disabled=!canControl;
     if(!softwareGraphics&&renderer.compileAsync)renderer.compileAsync(world,camera).catch(()=>{});
@@ -159,17 +160,22 @@ function jumpAction(delta){if(frame?.control_mode==='showcase')send({type:'showc
 window.addEventListener('keydown',event=>{
   if(event.ctrlKey||event.altKey||event.metaKey)return;
   const key=event.code.startsWith('Key')?event.code.slice(3):event.code;
-  if(!['Enter','NumpadEnter','Space','Escape','Backspace','R','M','P','V','Slash','ArrowLeft','ArrowRight'].includes(key))return;
+  if(event.target.closest?.('input,textarea,select,[contenteditable="true"]'))return;
+  if(!actionKeys.has(key)&&!['Enter','NumpadEnter','Space','Escape','Backspace','R','M','C','P','V','F','Slash','ArrowLeft','ArrowRight'].includes(key))return;
   event.preventDefault();if(event.repeat)return;void sounds.unlock();
   if(key==='Enter'||key==='NumpadEnter'){command('toggle');return;}
   if(key==='Space'){command('reposition');return;}
   if(key==='Escape'){pause();return;}
   if(key==='R'||key==='Backspace'){command('restart');return;}
+  if(key==='C'){chooseMode('manual');return;}
   if(key==='P'){chooseMode('ai');return;}
   if(key==='V'){chooseMode('showcase');return;}
   if(key==='ArrowLeft'||key==='ArrowRight'){jumpAction(key==='ArrowLeft'?-1:1);return;}
   if(key==='Slash'){showHelp($('controls-panel').hidden);return;}
   if(key==='M'){sounds.toggle();return;}
+  if(frame?.control_mode!=='manual'||!frame.playing||frame.result||frame.match_phase!=='fight'||loadedRound!==frame.round_index)return;
+  if(key==='F'){send({type:'face'});return;}
+  if(actionKeys.has(key)&&!held.has(key)){held.add(key);sendKeys();}
 });
 window.addEventListener('keyup',event=>{const key=event.code.startsWith('Key')?event.code.slice(3):event.code;if(actionKeys.has(key)){event.preventDefault();held.delete(key);sendKeys();}});
 window.addEventListener('blur',pause);
@@ -177,9 +183,9 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 window.addEventListener('pagehide',pause);
 $('start').onclick=()=>command('toggle');$('restart').onclick=$('again').onclick=()=>command('restart');
 $('reposition').onclick=()=>command('reposition');
-$('mode').onclick=()=>chooseMode('ai');$('showcase').onclick=()=>chooseMode('showcase');$('help').onclick=()=>showHelp($('controls-panel').hidden);$('close-help').onclick=()=>showHelp(false);
+$('manual').onclick=()=>chooseMode('manual');$('mode').onclick=()=>chooseMode('ai');$('showcase').onclick=()=>chooseMode('showcase');$('help').onclick=()=>showHelp($('controls-panel').hidden);$('close-help').onclick=()=>showHelp(false);
 $('previous-action').onclick=()=>jumpAction(-1);$('next-action').onclick=()=>jumpAction(1);
-$('action-select').onchange=()=>send({type:'showcase_jump',index:Number($('action-select').value)});
+$('action-select').onchange=()=>{send({type:'showcase_jump',index:Number($('action-select').value)});$('canvas').focus({preventScroll:true});};
 $('sound').onclick=()=>{void sounds.unlock();sounds.toggle();};
 function setFollowing(value){following=value;$('follow').classList.toggle('selected',value);$('wide').classList.toggle('selected',!value);}
 $('follow').onclick=()=>setFollowing(true);
@@ -228,12 +234,16 @@ function receive(packet,arrival=performance.now()){
   const ready=packet.ready&&loadedRound===packet.round_index;
   $('start').disabled=!ready||!canControl||!!packet.result;$('restart').disabled=!packet.ready||!canControl;
   $('reposition').disabled=!ready||!canControl;
+  $('manual').disabled=!ready||!canControl;
   $('mode').disabled=!ready||!canControl;
   $('showcase').disabled=!ready||!canControl;
-  const show=packet.control_mode==='showcase',ai=!show;
+  const show=packet.control_mode==='showcase',manual=packet.control_mode==='manual',ai=packet.control_mode==='ai';
+  if(packet.control_mode!==displayedControlMode){displayedControlMode=packet.control_mode;clearKeys();}
+  $('manual').setAttribute('aria-pressed',String(manual));
+  $('manual-keys').hidden=show;
   $('mode').setAttribute('aria-pressed',String(ai));$('showcase').setAttribute('aria-pressed',String(show));
-  setText('red-label','红方 · AI');setText('red-action-label',show?'展示动作':'红方动作');
-  setText('mode-note',show?'单机器人依次播放全部可用动作；每段结束后回到舞台中央。可用左右方向键或下拉菜单选择动作。':'双方先热身再靠近，按格挡 30%、踢腿 35%、出拳 35% 选招，并持续朝向对手。Enter 暂停/继续，空格重置站位。');
+  setText('red-label',manual?'红方 · 你':'红方 · AI');setText('red-action-label',show?'展示动作':manual?'你的动作':'红方动作');
+  setText('mode-note',show?'单机器人依次播放全部可用动作；每段结束后回到舞台中央。可用左右方向键或下拉菜单选择动作。':manual?'你控制红方，蓝方自动应战。开场热身结束后可操作；自行控制距离，踢腿落地后衔接下一招。蓝方选招：格挡20%、踢腿40%、出拳40%。':'双方先热身再靠近，按格挡20%、踢腿40%、出拳40%选招。按 C 可随时接管红方。');
   $('scoreboard').hidden=show;$('showcase-panel').hidden=!show;$('blue-action-row').hidden=show;
   if(show&&packet.showcase){
     const s=packet.showcase;setText('showcase-name',s.label);setText('showcase-counter',`${s.index+1} / ${s.total} · 第 ${s.lap} 轮`);
@@ -264,9 +274,9 @@ function receive(packet,arrival=performance.now()){
   const time=packet.result?(packet.result.round_time_s??packet.result.time_s):(packet.round_time??packet.time),remaining=packet.limit===null?null:Math.max(0,Math.ceil(packet.limit-time));
   setText('timer',remaining===null?'∞':`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`);
   $('timer').style.color=remaining!==null&&remaining<=10?'#f2cd83':'';
-  setText('status',packet.result?'回合结束':!packet.started?'等待开始':packet.playing?(packet.match_phase==='warmup'?'双方热身中':'AI 对打中'):'已暂停');
+  setText('status',packet.result?'回合结束':!packet.started?'等待开始':packet.playing?(packet.match_phase==='warmup'?'双方热身中':manual?'你 vs AI':'AI 对打中'):'已暂停');
   setText('red-action',packet.actions[0]);setText('blue-action',packet.actions[1]);
-  setText('hint',!packet.started?'P 观看 AI 对打 · V 展示全部动作':!packet.playing?'已暂停 · 按 Enter 继续':show?'← / → 切换动作 · Space 重播当前动作 · Enter 暂停':packet.match_phase==='warmup'?'双方热身后开始靠近 · 热身不计入回合时长':'AI 自动对打 · Space 重置站位 · Enter 暂停');
+  setText('hint',!packet.started?'C 手动对打 · P AI 对打 · V 动作展示':!packet.playing?'已暂停 · 按 Enter 继续':show?'← / → 切换动作 · Space 重播当前动作 · Enter 暂停':packet.match_phase==='warmup'?(manual?'热身结束后可控制红方 · 按键说明在右下角':'双方热身后开始靠近 · 热身不计入回合时长'):manual?'你控制红方 · WASD 移动 · J/K/L 出拳 · H 格挡 · U/I/O 踢击':'AI 自动对打 · C 接管红方 · Space 重置站位');
   $('result').hidden=!packet.result;
   if(packet.result){
     setHTML('start','回合结束');setText('hint','按 R 开始新回合');

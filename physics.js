@@ -165,6 +165,7 @@ function publish(force=false){
     speed,inference_ms:inferenceMs,blue_label:'GRIT',events:events.filter(e=>data.time-e.time_s<.8),scoring_events:points.filter(e=>data.time-e.time_s<.8),
     events_count:events.length,points_count:points.length,contract,engine:'MuJoCo 3.12 WASM + GRIT ONNX',performance:profile,
     diagnostics:{torso_up:config.actors.map(a=>xmat[a.torso*9+8]),commands:actors[0].events.slice(-12),
+      manual_input:{keys:[...lastKeys],velocity:actors[0].velocity.slice(),free_heading:actors[0].freeHeading,guard:actors[0].guard},
       actor_modes:actors.map(a=>a.manual?'manual':'ai'),action_counts:actors.map(a=>a.events.length),
       ai_action_probabilities:AI_ACTION_PROBABILITIES,category_counts:actors.map(a=>a.aiCategoryCounts),
       kick_setups:actors.map(a=>a.kickSetup),leg_contact_counts:actors.map((_,i)=>events.filter(e=>e.player===i&&e.limb==='leg').length),
@@ -179,7 +180,7 @@ function reset(){
   round++;score=[0,0];result=null;events=[];points=[];seen=new Set();impulses=new Map();fallSince=[{},{}];kickContacts=[null,null];kickUnstable=[null,null];playing=false;started=false;finished=false;pending=[];lastKeys=new Set();settle=null;
   roundStartedAt=null;warmupStartedAt=null;warmupUntil=0;
   actors=[0,1].map(i=>new Planner(i,bank,round+6));controls=[0,1].map(()=>new GritState(config));scanSupport();
-  actors[0].setManual(false,0.);
+  actors[0].setManual(controlMode==='manual',0.);
   actors.forEach((a,i)=>{const s=observation(i);a.heading=yaw(s.quaternion);controls[i].reset(s,s.quaternion);});
   ready=true;repositionRequested=false;poseRevision++;lastPoseTime=-1;paceWall=performance.now();paceSim=0;speed=1;publish(true);
 }
@@ -206,9 +207,9 @@ async function tick(){
         if(previous!=='showcase'){showcase.select(0,true);round++;}
         controlMode='showcase';
       }else{
-        controlMode='ai';
+        controlMode=requested;
         if(previous==='showcase'||finished||result)reset();
-        actors[0].setManual(false,data.time);
+        actors[0].setManual(controlMode==='manual',data.time);
       }
       playing=true;started=true;lastInput=performance.now();paceWall=performance.now();paceSim=controlMode==='showcase'?showcase.data.time:data.time;
       lastPoseTime=-1;publish(true);
@@ -264,7 +265,7 @@ self.onmessage=event=>{
   if(m.type==='heartbeat')return;
   if(!ready)return;
   if(m.type==='mode'){
-    if(m.mode==='showcase'||m.mode==='ai')modeRequest=m.mode;
+    if(['showcase','ai','manual'].includes(m.mode))modeRequest=m.mode;
     return;
   }
   if(m.type==='showcase_jump'&&controlMode==='showcase'&&Number.isInteger(m.index)){
@@ -273,6 +274,7 @@ self.onmessage=event=>{
   if(m.type==='reposition'){repositionRequested=true;return;}
   if(m.type==='keys'){
     if(controlMode!=='manual')return;
+    if(!playing||result||roundStartedAt===null){lastKeys.clear();pending=[];return;}
     const next=new Set(m.keys);for(const key of next)if(!lastKeys.has(key)&&KEY_ACTION[key])pending.push(KEY_ACTION[key]);lastKeys=next;
   }else if(m.type==='toggle'){if(!finished||controlMode==='showcase'){playing=!playing;started=true;lastKeys.clear();pending=[];actors[0].pending=null;paceWall=performance.now();paceSim=controlMode==='showcase'?showcase.data.time:data.time;}}
   else if(m.type==='pause'){playing=false;lastKeys.clear();pending=[];actors[0].pending=null;}

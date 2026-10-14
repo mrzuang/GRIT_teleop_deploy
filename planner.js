@@ -1,7 +1,7 @@
 import {clamp,smooth,wrap,mix,norm,euler,yaw,matrix,slerp} from './math.js';
 
 const slice=(array,start,n)=>Array.from(array.subarray(start,start+n));
-export const AI_ACTION_PROBABILITIES=Object.freeze({punch:.35,leg:.35,guard:.30});
+export const AI_ACTION_PROBABILITIES=Object.freeze({punch:.40,leg:.40,guard:.20});
 export function unpackMotions(bank){
   for(const [name,clip] of Object.entries(bank.clips)){
     clip.name=name;const bytes=Uint8Array.from(atob(clip.data),c=>c.charCodeAt(0));clip.values=new Float32Array(bytes.buffer);delete clip.data;
@@ -34,7 +34,7 @@ export class Planner{
     this.manual=manual;this.pending=null;this.sequence=[];this.manualKeys.clear();this.freeHeading=null;this.guard=false;
     this.currentCommand=null;this.lastAttack=null;this.nextChoice=now;
     // Complete a kick's landing before the new driver takes another action.
-    if(this.clip?.family!=='kick')this.interrupt(now);
+    if(now>=this.warmupUntil&&this.clip?.family!=='kick')this.interrupt(now);
   }
   resetPose(heading,now){
     this.clip=null;this.sequence=[];this.pending=null;this.manualKeys.clear();this.guard=false;
@@ -134,21 +134,22 @@ export class Planner{
   }
   update(now,state,other,opponent){
     const dx=other.root[0]-state.root[0],dy=other.root[1]-state.root[1],distance=Math.hypot(dx,dy),bearing=Math.atan2(dy,dx),actual=yaw(state.quaternion),keys=this.manualKeys;
-    let turn=Number(keys.has('Q'))-Number(keys.has('E'));
+    const warming=now<this.warmupUntil;
+    let turn=warming?0:Number(keys.has('Q'))-Number(keys.has('E'));
     if(this.manual&&turn){if(this.freeHeading===null)this.freeHeading=actual;this.freeHeading+=turn*1.7*.02;}
     let desired=this.freeHeading===null?bearing:this.freeHeading;this.heading=actual+clamp(wrap(desired-actual),-.044,.044);
-    const warming=now<this.warmupUntil;
-    const oldGuard=this.guard;this.guard=this.manual&&keys.has('H');
+    const oldGuard=this.guard;this.guard=this.manual&&!warming&&keys.has('H');
     const kicking=this.clip?.family==='kick';
     if(this.clip&&now-this.clipStart>=this.clip.duration/this.clipTempo){this.clip=null;this.kickAim=null;this.nextChoice=now+.08;}
-    if(this.manual){
+    if(this.manual&&!warming){
       if(this.guard&&!oldGuard&&!kicking){this.interrupt(now);this.pending=null;}
       if(!this.guard&&oldGuard&&this.currentCommand==='guard'&&!kicking)this.interrupt(now);
       if(this.pending&&!this.guard&&!kicking&&(!this.clip||now-this.clipStart>=.10)){
-        this.interrupt(now);this.currentCommand=this.pending.name;this.sequence=this.choose(this.pending.name,opponent);this.pending=null;
+        const sequence=this.choose(this.pending.name,opponent);
+        if(sequence.length){this.interrupt(now);this.currentCommand=this.pending.name;this.sequence=sequence;this.pending=null;}
       }
       if(this.guard&&!this.clip){this.currentCommand='guard';this.sequence=this.choose('guard',opponent);}
-    }else if(!warming&&!this.clip&&!this.sequence.length&&now>=this.nextChoice&&distance<1.12&&state.up>.86){
+    }else if(!this.manual&&!warming&&!this.clip&&!this.sequence.length&&now>=this.nextChoice&&distance<1.12&&state.up>.86){
       this.selectAIAction(now,distance,opponent);
     }
     if(!this.manual&&!this.clip&&this.sequence.length&&!this.available(this.sequence[0][0],opponent)){
@@ -167,7 +168,9 @@ export class Planner{
         this.heading=actual+clamp(wrap(desired-actual),-.044,.044);
         const aligned=Math.abs(aim.heading_error)<.18,spaced=Math.abs(aim.range_error)<.11;
         const supported=state.support>0&&state.up>.9&&norm((state.velocity||[0,0]).slice(0,2))<.45;
-        canStart=aligned&&spaced&&supported&&now-since>=.16;
+        // Manual players own their range and may intentionally kick into air.
+        // Briefly aim, then execute without waiting indefinitely for AI spacing.
+        canStart=this.manual?state.support>0&&state.up>.9&&now-since>=.16&&(aligned||now-since>=.45):aligned&&spaced&&supported&&now-since>=.16;
         preparing=!canStart;
       }
       if(canStart&&this.start(name,tempo,zone,now,state,opponent))this.sequence.shift();

@@ -1,9 +1,9 @@
 {
   "policy_sha256": "39d573e970b7088275ed68ec8a9597fa9c402d98d5ad211991db7d8d0f5a82b9",
   "mujoco_version": "3.12.0",
-  "clips": 41,
+  "clips": 39,
   "pico_tempo": 1.3,
-  "attacks": 19,
+  "attacks": 17,
   "defences": 5,
   "source_manifest_sha256": "c31276538a474494fa03a3046ef9d05bde52c313b982e960beebdd5b4e8f021e",
   "files": {
@@ -24,8 +24,8 @@
       "sha256": "f74f38e38ce9f3904be4bac06c293bf86dcc836689a80f765b0f6e09a5fabe69"
     },
     "assets/motions.json.gz": {
-      "bytes": 1227580,
-      "sha256": "9cf62f0f558b296bad5acb654f4aeb179b94da7e6c3add3d66f925ed70aca829"
+      "bytes": 1179618,
+      "sha256": "0f41477ec4336065da3e0bb0eb33d83f7e5700cfcfc67a3e59f80d2dd9b14720"
     },
     "assets/scene-lite.json.gz": {
       "bytes": 589191,
@@ -317,28 +317,32 @@
         ]
       },
       {
-        "label": "\u540e\u8e22",
-        "keep": [
-          "back_kick"
-        ],
+        "label": "\u8f6c\u8eab\u540e\u8e22",
+        "keep": [],
         "members": [
           "back_kick"
         ]
       },
       {
+        "label": "\u817e\u7a7a\u65cb\u8f6c\u8e22",
+        "keep": [],
+        "members": [
+          "spinning_kick"
+        ]
+      },
+      {
         "label": "\u98de\u8e22",
         "keep": [
-          "spinning_kick",
           "left_flying_kick"
         ],
         "members": [
-          "spinning_kick",
           "left_flying_kick"
         ]
       }
     ],
-    "selected_count": 9,
+    "selected_count": 7,
     "excluded": [
+      "back_kick",
       "left_diagonal_knee",
       "left_knee",
       "left_low_round_kick",
@@ -352,7 +356,8 @@
       "right_oblique_kick",
       "right_push_kick",
       "right_side_kick",
-      "side_kick"
+      "side_kick",
+      "spinning_kick"
     ]
   },
   "policy_iteration": 99000,
