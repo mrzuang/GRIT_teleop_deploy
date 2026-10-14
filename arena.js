@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {HighlightReplay} from './replay.js';
+import {SiteStats} from './stats.js';
 
 const elements=new Map(),$=id=>{if(!elements.has(id))elements.set(id,document.getElementById(id));return elements.get(id);};
 const held=new Set(),actionKeys=new Set('W S A D Q E J K L H U I O Y B'.split(' ')),uiValues=new Map();
@@ -147,6 +148,16 @@ class Sounds{
   toggle(){this.muted=!this.muted;$('sound').innerHTML=`音效 ${this.muted?'关':'开'} <kbd>M</kbd>`;}
 }
 const sounds=new Sounds();
+const statistics=new SiteStats({onChange:(values,errors)=>{
+  for(const [kind,id] of [['views','site-views'],['matches','site-matches']]){
+    setText(id,values[kind]===null?'—':values[kind].toLocaleString('zh-CN'));
+    $(id).title=errors[kind]?'统计服务暂不可用，稍后刷新':kind==='views'?'全站页面浏览量':'全站已结束的比赛数量';
+    $(id).classList.toggle('stats-unavailable',!!errors[kind]);
+  }
+}});
+void statistics.start();
+setInterval(()=>{if(!document.hidden)void statistics.refresh();},60000);
+window.addEventListener('online',()=>void statistics.online());
 function send(message){socket?.postMessage(message);}
 function sendKeys(){if(canControl)send({type:'keys',seq:++inputSeq,keys:[...held]});paintKeys();}
 function clearKeys(){held.clear();sendKeys();}
@@ -263,7 +274,7 @@ function feedback(packet){
   if(packet.playing&&!packet.result&&packet.limit!==null){const remaining=Math.ceil(packet.limit-(packet.round_time??packet.time));if(remaining>0&&remaining<=10&&remaining!==lastTick)sounds.play('tick');lastTick=remaining;}
 }
 function receive(packet,arrival=performance.now()){
-  frame=packet;lastPacketAt=performance.now();canControl=packet.can_control;
+  statistics.record(packet);frame=packet;lastPacketAt=performance.now();canControl=packet.can_control;
   if(packet.controllers){
     const [red,blue]=packet.controllers;
     for(const [id,c] of [['red-controller',red],['blue-label',blue]])setText(id,c.version.split(' · ')[0]);

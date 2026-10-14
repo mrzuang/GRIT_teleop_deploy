@@ -47,3 +47,11 @@ body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:min(660px,cal
 @media(max-width:1500px){.showcase-panel:not([hidden])~.camera-tools{top:306px}}
 @media(max-width:1000px){.showcase-panel:not([hidden])~.camera-tools{top:344px}body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:calc(100dvh - 410px)}}
 @media(max-width:720px){.showcase-panel:not([hidden])~.camera-tools{top:370px}.showcase-panel:not([hidden])~.hint{display:none}body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:calc(100dvh - 434px)}}
+
+/* Small shared counters below the title; never block scene interaction. */
+.site-stats{position:absolute;top:89px;left:20px;display:flex;align-items:center;gap:15px;padding:7px 10px;border:1px solid #61708044;border-radius:8px;background:#0e1726d9;color:#aebfd2;font-size:12px;z-index:2;backdrop-filter:blur(8px)}.site-stats>span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.site-stats svg{width:16px;height:16px;fill:none;stroke:#f2cd83;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.site-stats strong{color:#f2cd83;font-size:14px;font-variant-numeric:tabular-nums}.site-stats small{font-size:11px}.site-stats .stats-unavailable{color:#99a7ba}
+@media(max-width:1000px){.site-stats{top:125px;font-size:11px;gap:12px}.site-stats strong{font-size:13px}}
+@media(max-width:720px){.site-stats{top:151px;left:10px;gap:15px;padding:6px 9px;font-size:12px}.site-stats strong{font-size:14px}}
+.brand{flex-shrink:0}.brand h1{white-space:nowrap}
+
+.site-stats{z-index:4}

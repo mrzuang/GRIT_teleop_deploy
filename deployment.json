@@ -21,8 +21,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "arena.js": {
-      "bytes": 30234,
-      "sha256": "9cc0d052f53449e1bc883dd63ec9b58c07662e996600babf252b1b9d0bcf5465"
+      "bytes": 30896,
+      "sha256": "f6bcc10fd3a4de4327cd5ac34ab804b2c7503a31adb996f3034265ef24a39063"
     },
     "assets/arena.mjb.gz": {
       "bytes": 37973941,
@@ -117,20 +117,20 @@
       "sha256": "123ea9781122aaea7e9109e49456f0c65ffbb76a753d5580fc0cb0e288d8521b"
     },
     "credits.html": {
-      "bytes": 3861,
-      "sha256": "e510f6e556a9e4203f2cc0b62b4a6b6c4521b1fd545b5df6fcc75a68734d4342"
+      "bytes": 4134,
+      "sha256": "de51cb126977cfbe3c4c0023657785100a32d1d61f5fe80db9a3d8f50123bbae"
     },
     "demo.html": {
-      "bytes": 7884,
-      "sha256": "1a505ee941dbb7dbc6c97b7ac27a987b973d79a003b4f2a4d2530b7feb976d01"
+      "bytes": 8540,
+      "sha256": "4c6100d16dea7f7238ac43f4c9e1a1b09e8be7022a06e8e842fc13fd3e95d84a"
     },
     "grit.js": {
       "bytes": 5087,
       "sha256": "ac26a657019ea84cf252d473c50d9d96599cb1930acf17cb9dd7666be154d178"
     },
     "index.html": {
-      "bytes": 7884,
-      "sha256": "1a505ee941dbb7dbc6c97b7ac27a987b973d79a003b4f2a4d2530b7feb976d01"
+      "bytes": 8540,
+      "sha256": "4c6100d16dea7f7238ac43f4c9e1a1b09e8be7022a06e8e842fc13fd3e95d84a"
     },
     "math.js": {
       "bytes": 2333,
@@ -197,8 +197,8 @@
       "sha256": "36aac00d956ffd9e36cd737f45b56f4b2f753cd3a1eaf86b395357e583df4194"
     },
     "style.css": {
-      "bytes": 21003,
-      "sha256": "3305046e50e3573e13b319d1e09d91ecc993e976d4fc9ac8a220230027933fd0"
+      "bytes": 22000,
+      "sha256": "0fc816e706c4bb3215fdc2e379ceabb4c805e648db9ed6843d1a4216d6545b1f"
     },
     "vendor/HEFT-LICENSE.txt": {
       "bytes": 1062,
@@ -255,6 +255,10 @@
     "vendor/three.module.min.js": {
       "bytes": 338908,
       "sha256": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6"
+    },
+    "stats.js": {
+      "bytes": 2823,
+      "sha256": "53f87c0fc64e1b938ce3ad70f09dcfaca8f2a3a2f6f05f2791b4e460e8bca3df"
     }
   },
   "kick_aim": {
@@ -367,5 +371,18 @@
       "sonic": [],
       "heft": []
     }
+  },
+  "statistics": {
+    "scope": "global",
+    "provider": "Abacus",
+    "started_at": "2026-10-14",
+    "namespace": "mrzuang-grit-teleop-deploy-arena-20261014",
+    "counters": [
+      "page-views",
+      "completed-matches"
+    ],
+    "counts_only_finished_rounds": true,
+    "no_user_forms": true,
+    "no_rankings": true
   }
 }

@@ -5,6 +5,7 @@ Static browser demo for [GRIT](https://github.com/mrzuang/GRIT_teleop_deploy). O
 - MuJoCo 3.12 WASM and selectable GRIT model_99000, SONIC v1.1 G1, and HEFT G1_PMG controllers run entirely in the browser. Each fighter has an independent model selector; all nine pairings are supported. Changing models resets the round.
 - AI fighting: different warmups, then approach; 20% guard / 40% kick / 40% punch selection, opponent-facing ground motions and calibrated kick windup/spacing, physical hit feedback, knockdown or 60-second points decision.
 - Manual fighting: C takes over red while blue remains AI. WASD moves, Q/E turns, F faces the opponent; J/K/L punches, hold H to guard, U/I/O kicks, Y taunts, B warms up. Complete keyboard guide is at the bottom right. Manual kicks allow misses; buffered attacks follow the landing.
+- Anonymous global page-view and completed-match totals appear below the title, starting with the 2026-10-14 counter release. Replays, pauses and position resets do not count as new matches. No login, player profile or ranking is required.
 - Follow camera only. T / Highlights replays recorded hit and KO poses at 0.25x, 0.5x or 1x, pausing live physics and scoring until playback ends.
 - Per-model competition action eligibility is checked in the actual browser simulator; the full showcase library remains available for every controller.
 - Single-robot stage: 37 curated actions (turning back kick and spinning kick removed) with previous/next and direct selection.
