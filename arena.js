@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {ArenaCamera} from './camera.js';
+import {ArenaCamera} from './camera.js?v=rear-damping-v1';
 import {cachedAssetFetch,prepareAssetCache} from './asset-cache.js';
 import {HighlightReplay} from './replay.js';
 import {SiteStats} from './stats.js';
@@ -47,9 +47,10 @@ function disposeArena(){
   arenaGroup=new THREE.Group();world.add(arenaGroup);
 }
 function buildScene(data){
+  const changedStage=nodes.length!==data.bodies.length;
   disposeArena();nodes=data.bodies.map(()=>{const n=new THREE.Group();arenaGroup.add(n);return n;});
   bodyMaterials=[[],[]];bodyFlashUntil=[0,0];
-  redRoot=data.bodies.indexOf('a_pelvis');blueRoot=data.bodies.indexOf('b_pelvis');redTorso=data.bodies.indexOf('a_torso_link');cameraRig.reset();
+  redRoot=data.bodies.indexOf('a_pelvis');blueRoot=data.bodies.indexOf('b_pelvis');redTorso=data.bodies.indexOf('a_torso_link');if(changedStage)cameraRig.reset();
   const meshes=new Map();
   for(const [id,mesh] of Object.entries(data.meshes)){
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(decode(mesh.vertices,Float32Array),3));

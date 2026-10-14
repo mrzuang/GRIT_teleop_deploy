@@ -6,7 +6,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./style.css">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
-  <script type="module" src="./arena.js?v=grit-cameras-v1"></script>
+  <script type="module" src="./arena.js?v=rear-damping-v1"></script>
 </head>
 <body>
 <header>
@@ -30,7 +30,7 @@
     <div class="showcase-controls"><button id="previous-action" title="方向左键">← 上一个</button><select id="action-select" aria-label="选择展示动作"></select><button id="next-action" title="方向右键">下一个 →</button></div>
     <p id="showcase-note">每段动作结束后回到舞台中央，自动播放下一段。</p>
   </section>
-  <div class="camera-tools"><button id="third-person" class="selected" aria-pressed="true" title="镜头保持在红方背后">第三人称视角</button><button id="follow" aria-pressed="false" title="镜头保持在两个机器人连线的侧面">跟随视角</button><button id="highlights" title="慢动作回看命中和击倒片段 · T" disabled>Highlights <kbd>T</kbd></button><button id="reposition" disabled title="保留比分和比赛计时">重置站位 <kbd>Space</kbd></button></div>
+  <div class="camera-tools"><button id="third-person" class="selected" aria-pressed="true" title="镜头滞后平滑移动，缓慢跟到红方背后">第三人称视角</button><button id="follow" aria-pressed="false" title="镜头保持在两个机器人连线的侧面">跟随视角</button><button id="highlights" title="慢动作回看命中和击倒片段 · T" disabled>Highlights <kbd>T</kbd></button><button id="reposition" disabled title="保留比分和比赛计时">重置站位 <kbd>Space</kbd></button></div>
   <section id="replay-panel" class="replay-panel" hidden aria-label="精彩慢动作回放"><strong>HIGHLIGHTS</strong><span id="replay-caption">慢动作回放</span><div><button id="replay-pause">暂停回放</button><select id="replay-speed" aria-label="回放速度"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1">1×</option></select><button id="replay-close">返回比赛</button></div><progress id="replay-progress" max="1" value="0"></progress></section>
   <div id="loading" class="loading"><div class="spinner"></div><strong id="loading-title">正在准备拳台</strong><p id="loading-detail">首次打开需加载机器人与策略模型</p></div>
   <section id="result" class="result" hidden aria-live="polite"><span id="result-reason"></span><h2 id="winner"></h2><p id="final-score"></p><button id="again" class="primary">再来一局 <kbd>R</kbd></button></section>
@@ -47,7 +47,7 @@
   </section>
   <div class="session-keys"><span><kbd>C</kbd> 手动对打</span><span><kbd>P</kbd> AI 对打</span><span><kbd>V</kbd> 动作展示</span><span><kbd>Enter</kbd> 暂停 / 继续</span><span><kbd>Space</kbd> 重置站位</span><span><kbd>←</kbd> / <kbd>→</kbd> 切换展示动作</span><span><kbd>R</kbd> / <kbd>⌫</kbd> 重开</span><span><kbd>M</kbd> 音效开关</span><span><kbd>T</kbd> 精彩慢动作回放</span><span><kbd>?</kbd> 展开 / 收起说明</span></div>
   <p class="mouse-help">滚轮 / 双指缩放 · 按钮切换视角</p>
-  <p class="rules">双方均使用 GRIT 99000。第三人称位于红方背后，跟随视角从侧面观看双方。<br>对打：头 / 躯干 / 大腿命中 +1，倒地立即判负，满一分钟比分决胜。<br>Space 回到开场站位，保留比分和计时；展示时重新播放当前动作。</p>
+  <p class="rules">双方均使用 GRIT 99000。第三人称平滑跟到红方背后，跟随视角从侧面观看双方。<br>对打：头 / 躯干 / 大腿命中 +1，倒地立即判负，满一分钟比分决胜。<br>Space 回到开场站位，保留比分和计时；展示时重新播放当前动作。</p>
 </footer>
 </body>
 </html>

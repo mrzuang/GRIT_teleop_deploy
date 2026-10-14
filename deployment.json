@@ -21,8 +21,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "arena.js": {
-      "bytes": 29463,
-      "sha256": "52a11005ce84090a96c46fb005f9ada690751c365cfacc2d8b09d0af942a3976"
+      "bytes": 29553,
+      "sha256": "d1a8bfc9faf617896b9e57a75bbd0d55537e6674cd98a7a62ad94b9d02c38bb5"
     },
     "asset-cache.js": {
       "bytes": 3150,
@@ -81,24 +81,24 @@
       "sha256": "37ae5faa8bdc5bc484fcb9fea1533a1edda47b8ca86574911d500e97ed24c5ad"
     },
     "camera.js": {
-      "bytes": 3460,
-      "sha256": "d409e67c3fbc01150bc0995fe0ef2087e56d7211c78caece227991eb34459022"
+      "bytes": 4865,
+      "sha256": "fa6d38c17b588db93e4928e4eb04da94936ea89f0f0591fae37824da8dfab283"
     },
     "credits.html": {
       "bytes": 2994,
       "sha256": "344bb355084169d105a11dc00ca1dc37e78f9fc982183b9b8515f6b263aefe70"
     },
     "demo.html": {
-      "bytes": 7984,
-      "sha256": "58c376c3868fe1c5eb8f25945e98caa4a42da7735f6587a24177ba7b55fbce94"
+      "bytes": 8014,
+      "sha256": "991d1ae2f612c6c1eb8082ff44286a617805375b87cdc8b4ecfc004272147bd6"
     },
     "grit.js": {
       "bytes": 5087,
       "sha256": "ac26a657019ea84cf252d473c50d9d96599cb1930acf17cb9dd7666be154d178"
     },
     "index.html": {
-      "bytes": 7984,
-      "sha256": "58c376c3868fe1c5eb8f25945e98caa4a42da7735f6587a24177ba7b55fbce94"
+      "bytes": 8014,
+      "sha256": "991d1ae2f612c6c1eb8082ff44286a617805375b87cdc8b4ecfc004272147bd6"
     },
     "loading-assets.json": {
       "bytes": 1873,
@@ -286,7 +286,7 @@
   },
   "camera_modes": {
     "default": "third",
-    "third": "behind_red_torso",
+    "third": "smoothed_behind_red_torso",
     "follow": "perpendicular_to_fighter_line"
   },
   "camera_button_fonts_px": {
@@ -321,5 +321,12 @@
         }
       }
     ]
+  },
+  "third_person_smoothing": {
+    "target_time_constant_s": 0.4,
+    "orbit_time_constant_s": 1.15,
+    "position_time_constant_s": 0.55,
+    "maximum_orbit_speed_deg_s": 45,
+    "smooth_transition_from_side": true
   }
 }
