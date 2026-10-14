@@ -1,22 +1,16 @@
 # GRIT interactive MuJoCo demo
 
-Static browser demo for [GRIT](https://github.com/mrzuang/GRIT_teleop_deploy). Open `index.html` through HTTP(S); `demo.html` provides the same interface.
+Static browser demo for [GRIT](https://github.com/mrzuang/GRIT_teleop_deploy). Both index.html and demo.html open the same interactive arena.
 
-- MuJoCo 3.12 WASM and selectable GRIT model_99000, SONIC v1.1 G1, and HEFT G1_PMG controllers run entirely in the browser. Choose each fighter’s model in the left-side pre-match panel; all nine pairings are supported. Choices lock and the panel hides when the match starts, including during pauses and highlights. R opens a new round for changing models. The showcase keeps its own model selector.
-- AI fighting: different warmups, then approach; 20% guard / 40% kick / 40% punch selection, opponent-facing ground motions and calibrated kick windup/spacing, physical hit feedback, knockdown or 60-second points decision.
-- Manual fighting: C takes over red while blue remains AI. WASD moves, Q/E turns, F faces the opponent; J/K/L punches, hold H to guard, U/I/O kicks, Y taunts, B warms up. Complete keyboard guide is at the bottom right. Manual kicks allow misses; buffered attacks follow the landing.
-- Anonymous global page-view and completed-match totals appear below the title, starting with the 2026-10-14 counter release. Replays, pauses and position resets do not count as new matches. No login, player profile or ranking is required.
-- Follow camera only. T / Highlights replays recorded hit and KO poses at 0.25x, 0.5x or 1x, pausing live physics and scoring until playback ends.
-- Per-model competition action eligibility is checked in the actual browser simulator; the full showcase library remains available for every controller.
-- Single-robot stage: 37 curated actions (turning back kick and spinning kick removed) with previous/next and direct selection.
-- Enter starts/pauses, Space resets positions, R resets the round, C selects manual fighting, P selects AI fighting, V selects the showcase, and M toggles audio.
+- Both fighters and the single-robot showcase use the original GRIT model_99000. MuJoCo 3.12 WASM and ONNX Runtime run in the browser.
+- Manual fighting, AI fighting and the complete 37-action showcase are available. R restarts, Space resets positions, C selects manual fighting, P selects AI fighting, V selects the showcase, and Enter starts or pauses.
+- Default third-person camera stays behind the red robot. Follow view stays perpendicular to the line between the fighters. Use the wheel or pinch to zoom. Camera buttons use larger text.
+- T / Highlights replays recorded hit and KO poses at 0.25x, 0.5x or 1x while pausing live physics and scoring.
+- Matches start with warmups, then use 20% guard / 40% kick / 40% punch selection. Physical head, body and thigh hits score; knockdown wins immediately, otherwise points decide after 60 seconds.
+- Shared anonymous view and completed-match counters start from the 2026-10-14 counter release. No login or player details are requested.
 
-The default site address after Pages is enabled is https://mrzuang.github.io/GRIT_teleop_deploy/ .
+Large resources load in parallel and are cached by SHA256 in browser Cache Storage. The unchanged binary physics scene loads through MEMFS, avoiding the old per-byte conversion. Local Chrome measurements improved from about 28.6 seconds to 3.1 seconds on first load and 1.9 seconds with the asset cache; first internet downloads still depend on network speed. No simulation geometry or policy weights were changed by this optimization.
 
-## Enable GitHub Pages
+Public demo: https://mrzuang.github.io/GRIT_teleop_deploy/ . This gh-pages branch contains the static website and runtime assets. GitHub Pages serves its root directory.
 
-In the repository's **Settings → Pages**, select **Deploy from a branch**, choose **gh-pages**, choose **/(root)**, and save. This branch contains only the static website and its runtime assets.
-
-All JavaScript, WASM, ONNX and model assets are served locally from this branch. First loading the fighting arena transfers about 73 MB; the single-robot stage loads additional assets when selected. SONIC loads an additional 167 MB on first selection; HEFT adds about 24 MB. Model sessions are reused after loading. Original FP32 weights are retained; SONIC uses an output-equivalent G1 encoder subgraph and a batched decoder. HEFT uses its matching nopos observation configuration. Use Chrome/Edge with graphics acceleration. Quality settings include auto, smooth and high.
-
-See [credits.html](credits.html) and `vendor/*LICENSE*` for provenance and runtime licenses. Original motion sources retain their own terms. `deployment.json` records the content hashes of this release.
+See [credits.html](credits.html) and vendor licenses for provenance. deployment.json records this release's content hashes.

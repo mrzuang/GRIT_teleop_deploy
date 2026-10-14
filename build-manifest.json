@@ -54,42 +54,6 @@
     "assets/policy_99000.onnx": {
       "bytes": 9441300,
       "sha256": "39d573e970b7088275ed68ec8a9597fa9c402d98d5ad211991db7d8d0f5a82b9"
-    },
-    "assets/controllers/sonic.json": {
-      "bytes": 4650,
-      "sha256": "57bddd92ec6825237778d98059e6549dc39ada04de279fbc4845fed87b21e29c"
-    },
-    "assets/controllers/sonic_decoder.02.bin": {
-      "bytes": 49115352,
-      "sha256": "8c42123d751f9cfad5b966e47bf032d38278ec6231486376f707ac4dfbe78e68"
-    },
-    "assets/controllers/heft.json": {
-      "bytes": 4778,
-      "sha256": "e18b07b45b8f31eef45fef736337e524d84b8f756923bb54ed3257d6602578e6"
-    },
-    "assets/controllers/sonic_encoder.00.bin": {
-      "bytes": 17123456,
-      "sha256": "df3f2ea8506bcb537f8241552d6d730abd3c8d5e16119c2eccc1404028d5c7f2"
-    },
-    "assets/controllers/heft_policy.00.bin": {
-      "bytes": 24012157,
-      "sha256": "27ffe07f245da7a65856595ec63780306209472961f790e011d3a7312283bc75"
-    },
-    "assets/controllers/sonic_decoder.01.bin": {
-      "bytes": 50331648,
-      "sha256": "493ce9afa5ebdf15651a0aa1c03915f78854beb822f4c63d12b50ef301c29cc7"
-    },
-    "assets/controllers/compatibility.json": {
-      "bytes": 4551,
-      "sha256": "99cf930bc958dda9c0e63faa1ced4da8f01359cd2b5a7731b86ec42f51f75241"
-    },
-    "assets/controllers/sonic_decoder.00.bin": {
-      "bytes": 50331648,
-      "sha256": "a05d682247db5d6370d5f69067933db597bfe3b9be70597662200e60bbe884b7"
-    },
-    "assets/controllers/contracts.json": {
-      "bytes": 612476,
-      "sha256": "7891b7be900c0a0dd9a6c74dd5a1fda33c5ae9ef9baab68e034db36c3ebbe115"
     }
   },
   "disabled_defences": [
@@ -399,23 +363,5 @@
   "policy_iteration": 99000,
   "policy_checkpoint_sha256": "2f659759d3900841e771ed73d62af1cc0577468e71daa93edaa0d81dda81c24b",
   "policy_file": "policy_99000.onnx",
-  "controllers": {
-    "sonic": {
-      "version": "v1.1 \u00b7 G1",
-      "reference_frames": 46,
-      "files": {
-        "encoder": "df3f2ea8506bcb537f8241552d6d730abd3c8d5e16119c2eccc1404028d5c7f2",
-        "decoder": "ef3b512689b1ca3b6079dd3c2aacee944db4d30428676ac4aa40e9721ce85fe5"
-      }
-    },
-    "heft": {
-      "version": "G1_PMG \u00b7 nopos",
-      "reference_frames": 16,
-      "files": {
-        "policy": "27ffe07f245da7a65856595ec63780306209472961f790e011d3a7312283bc75"
-      }
-    }
-  },
-  "showcase_clips": 37,
-  "competition_filter": "per-controller; showcase retains the complete library"
+  "showcase_clips": 37
 }
