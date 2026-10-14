@@ -34,20 +34,6 @@ Training and data-generation code are outside the scope of this repository.
   <img src="docs/assets/teleop_demo_5.gif" alt="GRIT teleoperation demo 5" width="320">
 </p>
 
-## TODO List
-
-1. **August 29: GRIT v0.0.1**: Release the initial policy checkpoint, together
-   with complete pipelines for sim2sim, local sim2real deployment, and VR
-   teleoperation.
-2. **September: GRIT v0.0.2**: Release an updated policy checkpoint and its
-   technical documentation, along with an on-device deployment pipeline,
-   hardware modification plans for the head and hands, and a VLA data
-   collection pipeline.
-3. **October: GRIT v1.0.0**: Officially release the general-purpose motion
-   foundation model, including a technical report (paper), an integrated
-   checkpoint, the training dataset, framework, and source code, plus a tutorial
-   on integrating VLA data collection and training.
-
 ## Repository layout
 
 ```text
