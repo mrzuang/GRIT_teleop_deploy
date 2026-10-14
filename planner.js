@@ -16,7 +16,8 @@ export function sample(clip,time){
 function curve(values,phase){const f=phase*(values.length-1),a=Math.floor(f),b=Math.min(a+1,values.length-1),u=f-a;return Array.isArray(values[a])?values[a].map((x,i)=>mix(x,values[b][i],u)):mix(values[a],values[b],u);}
 
 export class Planner{
-  constructor(index,bank,seed=7){
+  constructor(index,bank,seed=7,options={}){
+    this.referenceFrames=options.referenceFrames||16;this.combatAllowed=options.combat?.allowed?new Set(options.combat.allowed):null;this.notice=null;
     this.index=index;this.manual=index===0;this.bank=bank;this.randomState=(seed+index*7919)>>>0;this.clip=null;this.clipStart=0;this.clipTempo=1;
     this.heading=0;this.freeHeading=null;this.velocity=[0,0];this.gaitPhase=0;this.gaitAmplitude=0;
     this.command=bank.guard.slice();this.entry=this.command.slice();this.sequence=[];this.pending=null;this.manualKeys=new Set();
@@ -28,7 +29,15 @@ export class Planner{
   }
   random(){let x=this.randomState;x^=x<<13;x^=x>>>17;x^=x<<5;this.randomState=x>>>0;return this.randomState/4294967296;}
   select(values){return values[Math.min(values.length-1,Math.floor(this.random()*values.length))];}
-  request(name,now){this.pending={name,time:now};}
+  supports(name){
+    const enabled=n=>!this.combatAllowed||this.combatAllowed.has(n);
+    if(name==='guard')return Object.entries(this.bank.clips).some(([n,c])=>['defence','counter'].includes(c.family)&&!(this.bank.disabled_defences||[]).includes(n)&&enabled(n));
+    return (this.bank.choices[name]||[]).some(c=>c.sequence.every(s=>enabled(s[0])));
+  }
+  request(name,now){
+    if(!this.supports(name)){this.notice={until:now+1.5,text:'此模型未启用该类动作'};return;}
+    this.notice=null;this.pending={name,time:now};
+  }
   setManual(manual,now){
     if(this.manual===manual)return;
     this.manual=manual;this.pending=null;this.sequence=[];this.manualKeys.clear();this.freeHeading=null;this.guard=false;
@@ -52,19 +61,24 @@ export class Planner{
   beginWarmup(now,until,state,opponent){
     this.currentCommand='warmup';this.aiCategory=null;this.sequence=[];this.warmupUntil=until;
     const names=['pico_warmup_forearms','pico_warmup_release'];
-    this.start(names[this.index],1,'body',now,state,opponent);
+    const selected=[names[this.index],names[1-this.index]].find(n=>this.available(n,opponent));
+    if(selected)this.start(selected,1,'body',now,state,opponent);
     this.nextChoice=until;
   }
-  available(name,opponent){return opponent.clip?.name!==name;}
+  available(name,opponent){return (!this.combatAllowed||this.combatAllowed.has(name))&&opponent.clip?.name!==name;}
   selectAIAction(now,distance,opponent){
     // Draw the family first, independently of distance or incoming attacks.
     // Range may choose a variant inside that family, never a different family.
     const draw=this.random();
-    const category=draw<AI_ACTION_PROBABILITIES.punch?'punch':draw<AI_ACTION_PROBABILITIES.punch+AI_ACTION_PROBABILITIES.leg?'leg':'guard';
+    const usable={punch:['light','heavy','combo'].some(c=>this.supports(c)),leg:['kick','flying_kick'].some(c=>this.supports(c)),guard:this.supports('guard')};
+    const weights=Object.fromEntries(Object.entries(AI_ACTION_PROBABILITIES).map(([k,v])=>[k,usable[k]?v:0])),total=Object.values(weights).reduce((a,b)=>a+b,0);
+    if(!total){this.nextChoice=now+.5;return;}
+    const value=draw*total,category=value<weights.punch?'punch':value<weights.punch+weights.leg?'leg':'guard';
     let command='guard';
     if(category==='punch'){
       const variant=this.random();command=variant<.35?'light':variant<.65?'heavy':'combo';
     }else if(category==='leg')command=distance>.72&&this.random()<.30?'flying_kick':'kick';
+    if(!this.supports(command))command=(category==='punch'?['light','heavy','combo']:category==='leg'?['kick','flying_kick']:['guard']).find(c=>this.supports(c));
     this.aiCategory=category;this.currentCommand=command;this.sequence=this.choose(command,opponent);this.nextChoice=now+.5;
     this.aiSelections.push({time_s:now,category,command,draw});
   }
@@ -73,7 +87,7 @@ export class Planner{
       const names=Object.keys(this.bank.clips).filter(n=>['defence','counter'].includes(this.bank.clips[n].family)&&!(this.bank.disabled_defences||[]).includes(n)&&this.available(n,opponent));
       return names.length?[[this.select(names),1,'head']]:[];
     }
-    const choices=(this.bank.choices[command]||[]).filter(c=>this.available(c.sequence[0][0],opponent));
+    const choices=(this.bank.choices[command]||[]).filter(c=>c.sequence.every(s=>!this.combatAllowed||this.combatAllowed.has(s[0]))&&this.available(c.sequence[0][0],opponent));
     let total=choices.reduce((v,c)=>v+c.weight,0),draw=this.random()*total;
     for(const c of choices){draw-=c.weight;if(draw<=0)return c.sequence.map(s=>s.slice());}
     return [];
@@ -124,7 +138,7 @@ export class Planner{
     const requested=speed>.02?Math.min(1.12,speed/gait.nominal_speed):Math.min(1,Math.abs(error)*2);
     this.gaitAmplitude+=clamp(requested-this.gaitAmplitude,-.06,.06);
     const q=[],p=[],r=[],amp=this.gaitAmplitude;
-    for(let k=0;k<16;k++){
+    for(let k=0;k<this.referenceFrames;k++){
       const t=k/50,phase=(this.gaitPhase+t/cycle)%1,gq=curve(gait.q,phase),a=curve(gait.angles,phase),row=bank.guard.slice();
       for(let j=0;j<15;j++)row[j]+=amp*(gq[j]-bank.guard[j]);
       a[0]=bank.guard_angles[0]+amp*(a[0]-bank.guard_angles[0]);a[1]=bank.guard_angles[1]+amp*(a[1]-bank.guard_angles[1]);a[2]=actual+rate*(.06+t);
@@ -202,7 +216,7 @@ export class Planner{
         const desiredCorrection=wrap(bearing-(this.clipHeading+first.angles[2]));
         this.facingCorrection+=clamp(wrap(desiredCorrection-this.facingCorrection),-.044,.044);
       }
-      for(let k=0;k<16;k++){
+      for(let k=0;k<this.referenceFrames;k++){
         const t=k/50,source=sample(clip,elapsed+t*this.clipTempo),intro=smooth((elapsed+t*this.clipTempo)/(clip.transition||.14)),outro=smooth((elapsed+t*this.clipTempo-clip.duration+(clip.transition||.14))/(clip.transition||.14));
         let q=source.q.map((v,j)=>mix(this.entry[j],v,intro));q=q.map((v,j)=>mix(v,this.bank.guard[j],outro));
         if(full){
@@ -221,7 +235,7 @@ export class Planner{
       this.action=(this.manual?'YOU / ':'AI / ')+clip.name.toUpperCase();
     }else this.action=(this.manual?'YOU / ':'AI / ')+(warming?'WARMUP / READY':preparing?'KICK SETUP / '+this.kickSetup.name.toUpperCase():norm(velocity)>.03?'MOVE':'PICO READY');
     if(this.handover){
-      for(let k=0;k<16;k++){
+      for(let k=0;k<this.referenceFrames;k++){
         const blend=smooth((now-this.handover.time+k/50)/.12);ref.q[k]=ref.q[k].map((v,j)=>mix(this.handover.q[j],v,blend));
         ref.p[k][2]=mix(this.handover.z,ref.p[k][2],blend);ref.r[k]=slerp(this.handover.r,ref.r[k],blend);
       }
@@ -234,6 +248,7 @@ export class Planner{
       for(const row of ref.q)row[12]=clamp(row[12]+correction,-.65,.65);
     }
     ref.q=ref.q.map(row=>row.map((v,j)=>clamp(v,this.bank.limits[j][0]+.02,this.bank.limits[j][1]-.02)));
+    if(this.notice&&now<this.notice.until)this.action+=' · '+this.notice.text;
     this.command=ref.q[0].slice();this.lastReference=ref;return ref;
   }
 }

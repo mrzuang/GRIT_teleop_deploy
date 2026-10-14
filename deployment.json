@@ -21,8 +21,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "arena.js": {
-      "bytes": 26187,
-      "sha256": "21344cbd53577e26ea09337ad52202484914068c97296971ea850b355636a533"
+      "bytes": 30234,
+      "sha256": "9cc0d052f53449e1bc883dd63ec9b58c07662e996600babf252b1b9d0bcf5465"
     },
     "assets/arena.mjb.gz": {
       "bytes": 37973941,
@@ -35,6 +35,42 @@
     "assets/contract-fixtures.json": {
       "bytes": 58797,
       "sha256": "58b06f5a64cfdecd72e09366fc2bf386619533ab97a4165f569b2e7f4b44ef99"
+    },
+    "assets/controllers/compatibility.json": {
+      "bytes": 4551,
+      "sha256": "99cf930bc958dda9c0e63faa1ced4da8f01359cd2b5a7731b86ec42f51f75241"
+    },
+    "assets/controllers/contracts.json": {
+      "bytes": 612476,
+      "sha256": "7891b7be900c0a0dd9a6c74dd5a1fda33c5ae9ef9baab68e034db36c3ebbe115"
+    },
+    "assets/controllers/heft.json": {
+      "bytes": 4778,
+      "sha256": "e18b07b45b8f31eef45fef736337e524d84b8f756923bb54ed3257d6602578e6"
+    },
+    "assets/controllers/heft_policy.00.bin": {
+      "bytes": 24012157,
+      "sha256": "27ffe07f245da7a65856595ec63780306209472961f790e011d3a7312283bc75"
+    },
+    "assets/controllers/sonic.json": {
+      "bytes": 4650,
+      "sha256": "57bddd92ec6825237778d98059e6549dc39ada04de279fbc4845fed87b21e29c"
+    },
+    "assets/controllers/sonic_decoder.00.bin": {
+      "bytes": 50331648,
+      "sha256": "a05d682247db5d6370d5f69067933db597bfe3b9be70597662200e60bbe884b7"
+    },
+    "assets/controllers/sonic_decoder.01.bin": {
+      "bytes": 50331648,
+      "sha256": "493ce9afa5ebdf15651a0aa1c03915f78854beb822f4c63d12b50ef301c29cc7"
+    },
+    "assets/controllers/sonic_decoder.02.bin": {
+      "bytes": 49115352,
+      "sha256": "8c42123d751f9cfad5b966e47bf032d38278ec6231486376f707ac4dfbe78e68"
+    },
+    "assets/controllers/sonic_encoder.00.bin": {
+      "bytes": 17123456,
+      "sha256": "df3f2ea8506bcb537f8241552d6d730abd3c8d5e16119c2eccc1404028d5c7f2"
     },
     "assets/motions.json.gz": {
       "bytes": 1179618,
@@ -73,36 +109,44 @@
       "sha256": "b3cf04c9388565d0e01d6978575dbc842e2e6163c9c61aee776888c6c738bb53"
     },
     "build-manifest.json": {
-      "bytes": 9065,
-      "sha256": "c87e6b59937bd2463d6fa8d8a4eb222923a96a370a2ca1a22f34b04d73d34348"
+      "bytes": 11110,
+      "sha256": "2cb10b925c05c6616f3b37d7c2e698b27368004e19d25614a747fbf1a7210cf4"
+    },
+    "controller_models.js": {
+      "bytes": 11641,
+      "sha256": "123ea9781122aaea7e9109e49456f0c65ffbb76a753d5580fc0cb0e288d8521b"
     },
     "credits.html": {
-      "bytes": 2721,
-      "sha256": "e1d61b87110b6b4f2220e189432303da86b13469ccf6531856862c6d5d0fade5"
+      "bytes": 3861,
+      "sha256": "e510f6e556a9e4203f2cc0b62b4a6b6c4521b1fd545b5df6fcc75a68734d4342"
     },
     "demo.html": {
-      "bytes": 6395,
-      "sha256": "1800a0d1f89cccaf4fecc37e038c6e7223343a7b3f51f8df704aa7bfb0bb9e43"
+      "bytes": 7884,
+      "sha256": "1a505ee941dbb7dbc6c97b7ac27a987b973d79a003b4f2a4d2530b7feb976d01"
     },
     "grit.js": {
       "bytes": 5087,
       "sha256": "ac26a657019ea84cf252d473c50d9d96599cb1930acf17cb9dd7666be154d178"
     },
     "index.html": {
-      "bytes": 6395,
-      "sha256": "1800a0d1f89cccaf4fecc37e038c6e7223343a7b3f51f8df704aa7bfb0bb9e43"
+      "bytes": 7884,
+      "sha256": "1a505ee941dbb7dbc6c97b7ac27a987b973d79a003b4f2a4d2530b7feb976d01"
     },
     "math.js": {
       "bytes": 2333,
       "sha256": "cea0925b84aaf55a25d2928fd60c63581c62aeba1d6cf28a8b10fc759593d76d"
     },
     "physics.js": {
-      "bytes": 20523,
-      "sha256": "cf406687ee1ce6f89a6c1f86934905e6eced8e45c6a3152fa26869d47776c6b6"
+      "bytes": 22128,
+      "sha256": "c2d71eb58bb23a191ee89b050c0e482e15babd6f9304a8829c3d65e6cde218d0"
     },
     "planner.js": {
-      "bytes": 16592,
-      "sha256": "2780281e60ffd6d395bedb1ab76e95d8bd8b555fc4ec10ffe2def22ff2d5bc69"
+      "bytes": 18098,
+      "sha256": "06eef192781a82235e08dc2bcd5a838894dc76b4143b2933262d800461277986"
+    },
+    "replay.js": {
+      "bytes": 4293,
+      "sha256": "04339bd1d46632f52f2282710fed74379efec49e25e01923cf7075624a73780f"
     },
     "rules.js": {
       "bytes": 524,
@@ -113,8 +157,8 @@
       "sha256": "7f5249ca011cbd09d6da346ebf2f54a226aee44d66d86e58a73b7a56796815e6"
     },
     "showcase.js": {
-      "bytes": 5415,
-      "sha256": "104def2d32a51dcf17c14d4270e2503c599c0da2a6acbe06bc250ca796227ba4"
+      "bytes": 5669,
+      "sha256": "ed88197dc58bb76287dd2b9f30d4f49383d8a21a535065ee40ad6d5dc9b8149d"
     },
     "sound/block.wav": {
       "bytes": 6656,
@@ -153,8 +197,12 @@
       "sha256": "36aac00d956ffd9e36cd737f45b56f4b2f753cd3a1eaf86b395357e583df4194"
     },
     "style.css": {
-      "bytes": 18328,
-      "sha256": "821317a71bb008d980db1123a2b2ec5fa7576f516d12ec2fbaa678bfb37e4d0d"
+      "bytes": 21003,
+      "sha256": "3305046e50e3573e13b319d1e09d91ecc993e976d4fc9ac8a220230027933fd0"
+    },
+    "vendor/HEFT-LICENSE.txt": {
+      "bytes": 1062,
+      "sha256": "ee39bc2fd73ddd518f8d694360aeb6f11358cea16f535862fa01c6ce4abf02a6"
     },
     "vendor/MUJOCO-LICENSE.txt": {
       "bytes": 11358,
@@ -167,6 +215,14 @@
     "vendor/OrbitControls.js": {
       "bytes": 38703,
       "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c"
+    },
+    "vendor/SONIC-LICENSE.txt": {
+      "bytes": 8886,
+      "sha256": "24ab66be50d1aca4fc5e029ef76ce4ceaac6557ea21665caf4b140695a76ffee"
+    },
+    "vendor/SONIC-NOTICES.txt": {
+      "bytes": 2786,
+      "sha256": "23fb2ecf02259d8fc78850e4f1466d44e01fbe514c5f2ffbab0578bd0054f0e0"
     },
     "vendor/THREE-LICENSE.txt": {
       "bytes": 1081,
@@ -233,5 +289,83 @@
     "mobile": 13,
     "desktop_key": 13,
     "mobile_key": 12
+  },
+  "controllers": [
+    "grit",
+    "sonic",
+    "heft"
+  ],
+  "controller_pairings": 9,
+  "per_controller_competition_filter": true,
+  "all_models_full_showcase": true,
+  "follow_camera_only": true,
+  "highlights": {
+    "source": "recorded physical poses and hit/KO events",
+    "speeds": [
+      0.25,
+      0.5,
+      1
+    ],
+    "shortcut": "T",
+    "freezes_physics_and_score": true
+  },
+  "controller_contracts": {
+    "grit": {
+      "dual_mean_ms": 4.050000023841858,
+      "contract": {
+        "history_error": 0,
+        "action_error": 2.384185791015625e-06,
+        "policy_sha256": "39d573e970b7088275ed68ec8a9597fa9c402d98d5ad211991db7d8d0f5a82b9",
+        "policy_iteration": 99000,
+        "loaded_sha256": "39d573e970b7088275ed68ec8a9597fa9c402d98d5ad211991db7d8d0f5a82b9",
+        "validated_batches": [
+          1,
+          2
+        ]
+      },
+      "mean_ms": 2.500000023841858,
+      "maximum_ms": 4.700000047683716,
+      "reference_frames": 16
+    },
+    "sonic": {
+      "dual_mean_ms": 16.389999985694885,
+      "contract": {
+        "input_error": 1.1920928955078125e-06,
+        "action_error": 1.1920928955078125e-06,
+        "fixtures": 6,
+        "backend": "ONNX Runtime Web WASM",
+        "policy_sha256": "ef3b512689b1ca3b6079dd3c2aacee944db4d30428676ac4aa40e9721ce85fe5",
+        "encoder_sha256": "df3f2ea8506bcb537f8241552d6d730abd3c8d5e16119c2eccc1404028d5c7f2",
+        "version": "v1.1 \u00b7 G1"
+      },
+      "mean_ms": 11.020000004768372,
+      "maximum_ms": 12.200000047683716,
+      "reference_frames": 46
+    },
+    "heft": {
+      "dual_mean_ms": 4.169999980926514,
+      "contract": {
+        "input_error": 2.384185791015625e-06,
+        "action_error": 2.384185791015625e-06,
+        "fixtures": 6,
+        "backend": "ONNX Runtime Web WASM",
+        "policy_sha256": "27ffe07f245da7a65856595ec63780306209472961f790e011d3a7312283bc75",
+        "encoder_sha256": null,
+        "version": "G1_PMG \u00b7 nopos"
+      },
+      "mean_ms": 2.25,
+      "maximum_ms": 3.299999952316284,
+      "reference_frames": 16
+    }
+  },
+  "motion_qualification": {
+    "clips_per_model": 37,
+    "total_trials": 111,
+    "all_passed": true,
+    "excluded": {
+      "grit": [],
+      "sonic": [],
+      "heft": []
+    }
   }
 }

@@ -33,3 +33,17 @@ header{height:auto;align-items:flex-start}.brand{padding:11px 15px;gap:12px}.bra
 @media(max-width:1000px){#controls-panel{width:380px;max-height:calc(100dvh - 390px)}}
 @media(max-width:720px){#controls-panel{width:min(380px,calc(100% - 20px));max-height:calc(100dvh - 434px);gap:10px 12px}#controls-panel .help-heading h2{font-size:20px}#controls-panel .mode-note,#controls-panel .manual-keys>div,#controls-panel .session-keys{font-size:13px}#controls-panel .manual-keys h3{font-size:15px}#controls-panel kbd,#controls-panel .mouse-help,#controls-panel .rules{font-size:12px}}
 @media(max-width:359px){#controls-panel .manual-keys>div,#controls-panel .session-keys{grid-template-columns:1fr}}
+
+/* Independent low-level controllers and recorded highlights. */
+.scoreboard{height:102px}.score small{font-size:10px;letter-spacing:.04em;margin:2px 0}.policy-select{display:block;pointer-events:auto;font:600 14px system-ui;color:#f2cd83;background:#18283b;border:1px solid #aa925d;border-radius:6px;padding:3px 18px 3px 7px;min-height:27px;cursor:pointer}.score.blue .policy-select{margin-left:auto}.score .policy-select:disabled{opacity:.5}.showcase-policy{display:flex;flex-direction:column;gap:3px;flex:none}.showcase-policy .policy-select{font-size:13px}.replay-panel{position:absolute;top:235px;left:50%;transform:translateX(-50%);width:min(530px,calc(100% - 32px));padding:13px 18px;border:1px solid #f2cd83;border-radius:10px;background:#101b2bea;z-index:2;box-shadow:0 8px 32px #0005}.replay-panel>strong{color:#f2cd83;font-size:16px;letter-spacing:.1em}.replay-panel>span{display:block;font-size:14px;margin:5px 0 10px}.replay-panel>div{display:flex;gap:8px}.replay-panel button,.replay-panel select{font:13px system-ui;padding:6px 10px}.replay-panel select{background:#18283b;color:#e8eff7;border:1px solid #526178;border-radius:6px}.replay-panel progress{display:block;width:100%;height:5px;margin-top:12px;accent-color:#f2cd83}.camera-tools #highlights:disabled{opacity:.45}
+@media(max-width:1000px){.scoreboard{height:102px}.replay-panel{top:275px}}
+@media(max-width:720px){.scoreboard{height:106px}.score{padding:8px 10px;gap:8px}.score span{font-size:12px}.score strong{font-size:29px}.score small{font-size:9px}.policy-select{font-size:12px;min-height:25px}.showcase-policy .policy-select{font-size:11px}.replay-panel{top:309px;padding:10px 12px}.replay-panel>span{font-size:12px}.replay-panel button,.replay-panel select{font-size:12px}.camera-tools button{padding:6px}.camera-tools kbd{display:none}}
+
+.replay-panel{top:auto;left:24px;bottom:165px;transform:none}
+@media(max-width:720px){.replay-panel{top:auto;left:10px;bottom:10px;width:calc(100% - 20px)}}
+/* Leave room for the extra showcase selector at intermediate widths. */
+.showcase-panel:not([hidden])~.camera-tools{top:290px}
+body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:min(660px,calc(100dvh - 385px))}
+@media(max-width:1500px){.showcase-panel:not([hidden])~.camera-tools{top:306px}}
+@media(max-width:1000px){.showcase-panel:not([hidden])~.camera-tools{top:344px}body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:calc(100dvh - 410px)}}
+@media(max-width:720px){.showcase-panel:not([hidden])~.camera-tools{top:370px}.showcase-panel:not([hidden])~.hint{display:none}body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:calc(100dvh - 434px)}}

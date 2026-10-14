@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
+import {HighlightReplay} from './replay.js';
 
 const elements=new Map(),$=id=>{if(!elements.has(id))elements.set(id,document.getElementById(id));return elements.get(id);};
 const held=new Set(),actionKeys=new Set('W S A D Q E J K L H U I O Y B'.split(' ')),uiValues=new Map();
-function setText(id,value){const key=id+':text';if(uiValues.get(key)!==value){$(id).textContent=value;uiValues.set(key,value);}}
-function setHTML(id,value){const key=id+':html';if(uiValues.get(key)!==value){$(id).innerHTML=value;uiValues.set(key,value);}}
+function setText(id,value){const key=id+':text';if(uiValues.get(key)!==value){$(id).textContent=value;uiValues.set(key,value);uiValues.delete(id+':html');}}
+function setHTML(id,value){const key=id+':html';if(uiValues.get(key)!==value){$(id).innerHTML=value;uiValues.set(key,value);uiValues.delete(id+':text');}}
 let socket, frame=null, round=null, loadingRound=null, loadedRound=null, canControl=false, inputSeq=0;
 let nodes=[], targets=[], starts=[], receivedAt=0, redRoot=0, blueRoot=0, following=true;
 let pendingPacket=null,poseTime=-1,interpolationMs=20,sceneSource=null,sceneLoadToken=0,quality='auto',autoLevel=2,slowSeconds=0,fastSeconds=0;
@@ -27,7 +28,7 @@ const world=new THREE.Scene();world.fog=new THREE.Fog(0x101a29,17,44);
 const camera=new THREE.PerspectiveCamera(42,1,.025,100);camera.up.set(0,0,1);camera.position.set(7,-9,6);
 const orbit=new OrbitControls(camera,$('canvas'));orbit.target.set(0,0,.7);orbit.enableDamping=true;orbit.dampingFactor=.12;
 orbit.minDistance=1.8;orbit.maxDistance=24;orbit.maxPolarAngle=Math.PI*.49;
-orbit.addEventListener('start',()=>setFollowing(false));
+
 world.add(new THREE.HemisphereLight(0xdaeaff,0x354050,2.6));
 const light=new THREE.DirectionalLight(0xffe9cd,3.5);light.position.set(3,-4,9);light.castShadow=true;
 light.shadow.mapSize.set(1024,1024);Object.assign(light.shadow.camera,{left:-5,right:5,top:5,bottom:-5,near:1,far:22});
@@ -93,6 +94,7 @@ async function loadScene(packet){
     $('manual').disabled=!canControl;
     $('showcase').disabled=!canControl;
     $('reposition').disabled=!canControl;
+    for(const id of ['red-policy','blue-policy','showcase-policy'])$(id).disabled=!canControl;
     if(!softwareGraphics&&renderer.compileAsync)renderer.compileAsync(world,camera).catch(()=>{});
   }catch(error){$('loading-detail').textContent=error.message;loadingRound=null;}
 }
@@ -149,11 +151,11 @@ function send(message){socket?.postMessage(message);}
 function sendKeys(){if(canControl)send({type:'keys',seq:++inputSeq,keys:[...held]});paintKeys();}
 function clearKeys(){held.clear();sendKeys();}
 function paintKeys(){document.querySelectorAll('[data-key]').forEach(b=>b.classList.toggle('held',held.has(b.dataset.key)));}
-function command(type){if(!canControl)return;void sounds.unlock();clearKeys();send({type});}
-function pause(){if(canControl){clearKeys();send({type:'pause'});}}
+function command(type){if(!canControl)return;finishReplay(false);void sounds.unlock();clearKeys();send({type});}
+function pause(){if(replay.active){replay.paused=true;setText('replay-pause','继续回放');}if(canControl){clearKeys();send({type:'pause'});}}
 function chooseMode(mode){
   if(!canControl||!frame?.ready||loadedRound!==frame.round_index)return;
-  void sounds.unlock();clearKeys();send({type:'mode',mode});
+  finishReplay(false);void sounds.unlock();clearKeys();send({type:'mode',mode});
 }
 function showHelp(show){$('controls-panel').hidden=!show;$('help').setAttribute('aria-expanded',String(show));}
 function jumpAction(delta){if(frame?.control_mode==='showcase')send({type:'showcase_jump',index:frame.showcase.index+delta});}
@@ -161,19 +163,20 @@ window.addEventListener('keydown',event=>{
   if(event.ctrlKey||event.altKey||event.metaKey)return;
   const key=event.code.startsWith('Key')?event.code.slice(3):event.code;
   if(event.target.closest?.('input,textarea,select,[contenteditable="true"]'))return;
-  if(!actionKeys.has(key)&&!['Enter','NumpadEnter','Space','Escape','Backspace','R','M','C','P','V','F','Slash','ArrowLeft','ArrowRight'].includes(key))return;
+  if(!actionKeys.has(key)&&!['Enter','NumpadEnter','Space','Escape','Backspace','R','M','C','P','V','F','T','Slash','ArrowLeft','ArrowRight'].includes(key))return;
   event.preventDefault();if(event.repeat)return;void sounds.unlock();
-  if(key==='Enter'||key==='NumpadEnter'){command('toggle');return;}
+  if(key==='Enter'||key==='NumpadEnter'){if(replay.active){toggleReplayPause();return;}command('toggle');return;}
   if(key==='Space'){command('reposition');return;}
-  if(key==='Escape'){pause();return;}
+  if(key==='Escape'){finishReplay(false);pause();return;}
   if(key==='R'||key==='Backspace'){command('restart');return;}
+  if(key==='T'){startReplay();return;}
   if(key==='C'){chooseMode('manual');return;}
   if(key==='P'){chooseMode('ai');return;}
   if(key==='V'){chooseMode('showcase');return;}
   if(key==='ArrowLeft'||key==='ArrowRight'){jumpAction(key==='ArrowLeft'?-1:1);return;}
   if(key==='Slash'){showHelp($('controls-panel').hidden);return;}
   if(key==='M'){sounds.toggle();return;}
-  if(frame?.control_mode!=='manual'||!frame.playing||frame.result||frame.match_phase!=='fight'||loadedRound!==frame.round_index)return;
+  if(replay.active||frame?.control_mode!=='manual'||!frame.playing||frame.result||frame.match_phase!=='fight'||loadedRound!==frame.round_index)return;
   if(key==='F'){send({type:'face'});return;}
   if(actionKeys.has(key)&&!held.has(key)){held.add(key);sendKeys();}
 });
@@ -187,9 +190,45 @@ $('manual').onclick=()=>chooseMode('manual');$('mode').onclick=()=>chooseMode('a
 $('previous-action').onclick=()=>jumpAction(-1);$('next-action').onclick=()=>jumpAction(1);
 $('action-select').onchange=()=>{send({type:'showcase_jump',index:Number($('action-select').value)});$('canvas').focus({preventScroll:true});};
 $('sound').onclick=()=>{void sounds.unlock();sounds.toggle();};
-function setFollowing(value){following=value;$('follow').classList.toggle('selected',value);$('wide').classList.toggle('selected',!value);}
-$('follow').onclick=()=>setFollowing(true);
-$('wide').onclick=()=>{setFollowing(false);camera.position.set(8,-10,8);orbit.target.set(0,0,.6);};
+function setFollowing(){following=true;$('follow').classList.add('selected');}
+$('follow').onclick=()=>{setFollowing();const center=orbit.target;camera.position.set(center.x+3,center.y-4,center.z+2.6);};
+const replay=new HighlightReplay();let replayResumePlaying=false,replayHelpOpen=false;
+function startReplay(){
+  if(replay.active){finishReplay(true);return;}
+  if(!frame?.ready||loadedRound!==frame.round_index||frame.control_mode==='showcase'||!replay.start(performance.now()))return;
+  replayResumePlaying=!!frame?.playing;replayHelpOpen=!$('controls-panel').hidden;showHelp(false);clearKeys();send({type:'pause'});
+  replay.speed=Number($('replay-speed').value);$('replay-panel').hidden=false;$('result').hidden=true;
+  setText('replay-pause','暂停回放');setText('highlights','返回比赛');
+}
+function finishReplay(resume=true){
+  if(!replay.active&&$('replay-panel').hidden)return;
+  const shouldResume=resume&&replayResumePlaying;replayResumePlaying=false;replay.stop();$('replay-panel').hidden=true;showHelp(replayHelpOpen);
+  setHTML('highlights','Highlights <kbd>T</kbd>');
+  if(frame?.poses){acceptPoses(frame.poses,true,frame.time);receive(frame);}
+  if(shouldResume&&frame&&!frame.playing&&!frame.finished)send({type:'toggle'});
+}
+function toggleReplayPause(){replay.paused=!replay.paused;setText('replay-pause',replay.paused?'继续回放':'暂停回放');}
+function drawReplay(now){
+  if(!replay.active)return;
+  const sample=replay.tick(now);if(!sample){finishReplay(true);return;}
+  acceptPoses(sample.poses,true,sample.time,now);$('result').hidden=true;
+  setText('red-score',sample.score[0]);setText('blue-score',sample.score[1]);setText('red-action',sample.actions[0]);setText('blue-action',sample.actions[1]);
+  const remaining=Math.max(0,Math.ceil(60-sample.roundTime));setText('timer',`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`);
+  setText('status',`回放 ${replay.speed}×`);setText('replay-caption',`${replay.clipIndex+1}/${replay.clips.length} · ${sample.caption}`);
+  $('replay-progress').value=sample.progress;setText('hint','真实比赛慢放 · Enter 暂停回放 · T 返回比赛');
+}
+$('highlights').onclick=startReplay;$('replay-close').onclick=()=>finishReplay(true);$('replay-pause').onclick=toggleReplayPause;
+$('replay-speed').onchange=()=>{replay.speed=Number($('replay-speed').value);$('canvas').focus({preventScroll:true});};
+function selectController(index,id){
+  if(!frame?.ready||loadedRound!==frame.round_index)return;
+  finishReplay(false);clearKeys();const ids=(frame.controllers||[{id:'grit'},{id:'grit'}]).map(c=>c.id);ids[index]=id;
+  for(const key of ['red-policy','blue-policy','showcase-policy'])$(key).disabled=true;
+  send({type:'controllers',ids});$('canvas').focus({preventScroll:true});
+}
+$('red-policy').onchange=()=>selectController(0,$('red-policy').value);
+$('blue-policy').onchange=()=>selectController(1,$('blue-policy').value);
+$('showcase-policy').onchange=()=>selectController(0,$('showcase-policy').value);
+
 
 function feedback(packet){
   if(packet.round_index!==round){round=packet.round_index;contactsSeen=-1;pointsSeen=-1;resultSeen=false;wasStarted=false;lastTick=-1;clearKeys();}
@@ -225,9 +264,13 @@ function feedback(packet){
 }
 function receive(packet,arrival=performance.now()){
   frame=packet;lastPacketAt=performance.now();canControl=packet.can_control;
-  if(packet.contract?.policy_iteration){
-    const label=`GRIT ${packet.contract.policy_iteration}`;setText('red-controller',label);setText('blue-label',label);
-    $('title').title=`GRIT checkpoint ${packet.contract.policy_iteration}`;
+  if(packet.controllers){
+    const [red,blue]=packet.controllers;
+    for(const [id,c] of [['red-controller',red],['blue-label',blue]])setText(id,c.version.split(' · ')[0]);
+    $('red-policy').value=red.id;$('blue-policy').value=blue.id;$('showcase-policy').value=red.id;
+    for(const [id,c] of [['red-policy',red],['blue-policy',blue],['showcase-policy',red]])$(id).title=`${c.label} ${c.version} · 比赛可用 ${c.combat_actions??37}/37 段 · 更换模型会重开回合`;
+    setHTML('title',`${red.label} <span>vs</span> ${blue.label}`);
+    $('title').title=`${red.label} ${red.version} vs ${blue.label} ${blue.version}`;
   }
   if(!sounds.initialized){sounds.initialized=true;if(packet.muted_default)sounds.toggle();}
     setText('connection',canControl?'浏览器仿真':'正在准备');$('connection').className='connection online';
@@ -237,17 +280,19 @@ function receive(packet,arrival=performance.now()){
   $('manual').disabled=!ready||!canControl;
   $('mode').disabled=!ready||!canControl;
   $('showcase').disabled=!ready||!canControl;
+  for(const id of ['red-policy','blue-policy','showcase-policy'])$(id).disabled=!ready||!canControl;
   const show=packet.control_mode==='showcase',manual=packet.control_mode==='manual',ai=packet.control_mode==='ai';
   if(packet.control_mode!==displayedControlMode){displayedControlMode=packet.control_mode;clearKeys();}
   $('manual').setAttribute('aria-pressed',String(manual));
   $('manual-keys').hidden=show;
+  $('highlights').disabled=!ready||!canControl||show||!replay.available;
   $('mode').setAttribute('aria-pressed',String(ai));$('showcase').setAttribute('aria-pressed',String(show));
   setText('red-label',manual?'红方 · 你':'红方 · AI');setText('red-action-label',show?'展示动作':manual?'你的动作':'红方动作');
   setText('mode-note',show?'单机器人依次播放全部可用动作；每段结束后回到舞台中央。可用左右方向键或下拉菜单选择动作。':manual?'你控制红方，蓝方自动应战。开场热身结束后可操作；自行控制距离，踢腿落地后衔接下一招。蓝方选招：格挡20%、踢腿40%、出拳40%。':'双方先热身再靠近，按格挡20%、踢腿40%、出拳40%选招。按 C 可随时接管红方。');
   $('scoreboard').hidden=show;$('showcase-panel').hidden=!show;$('blue-action-row').hidden=show;
   if(show&&packet.showcase){
     const s=packet.showcase;setText('showcase-name',s.label);setText('showcase-counter',`${s.index+1} / ${s.total} · 第 ${s.lap} 轮`);
-    $('showcase-progress').value=s.progress;setText('showcase-note',`${s.phase} · 每段动作结束后回到舞台中央，自动播放下一段。`);
+    $('showcase-progress').value=s.progress;setText('showcase-note',`${s.phase} · ${s.combat_eligible?'展示完整动作库':'该动作不用于此模型比赛，仍可展示'} · 每段结束回到中心。`);
     const select=$('action-select');
     if(select.options.length!==s.list.length){select.replaceChildren(...s.list.map((item,i)=>new Option(`${i+1}. ${item.label}`,String(i))));}
     select.value=String(s.index);
@@ -261,23 +306,24 @@ function receive(packet,arrival=performance.now()){
   if(loadedRound!==packet.round_index&&loadingRound!==packet.round_index)void loadScene(packet);
   if(loadedRound===packet.round_index){
     const resetPose=displayedPoseRevision!==packet.pose_revision;displayedPoseRevision=packet.pose_revision;
-    $('loading').hidden=true;acceptPoses(packet.poses,resetPose,packet.time,arrival);
+    $('loading').hidden=true;if(!replay.active)acceptPoses(packet.poses,resetPose,packet.time,arrival);
     if(resetPose){
       for(const effect of effects){world.remove(effect.orb);effect.orb.geometry.dispose();effect.orb.material.dispose();}effects.length=0;
       bodyFlashUntil=[0,0];hitBannerUntil=0;
       clearKeys();
     }
   }
+  if(replay.record(packet))finishReplay(false);$('highlights').disabled=show||!replay.available;
   feedback(packet);setText('red-score',packet.score[0]);setText('blue-score',packet.score[1]);
-  setText('round',`ROUND ${String(packet.round_index).padStart(2,'0')}`);setText('blue-label',packet.contract?.policy_iteration?`GRIT ${packet.contract.policy_iteration}`:packet.blue_label);
-  setHTML('title',`GRIT <span>vs</span> ${packet.blue_label==='SONIC'?'SONIC':'GRIT'}`);
+  setText('round',`ROUND ${String(packet.round_index).padStart(2,'0')}`);
   const time=packet.result?(packet.result.round_time_s??packet.result.time_s):(packet.round_time??packet.time),remaining=packet.limit===null?null:Math.max(0,Math.ceil(packet.limit-time));
   setText('timer',remaining===null?'∞':`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`);
   $('timer').style.color=remaining!==null&&remaining<=10?'#f2cd83':'';
   setText('status',packet.result?'回合结束':!packet.started?'等待开始':packet.playing?(packet.match_phase==='warmup'?'双方热身中':manual?'你 vs AI':'AI 对打中'):'已暂停');
   setText('red-action',packet.actions[0]);setText('blue-action',packet.actions[1]);
   setText('hint',!packet.started?'C 手动对打 · P AI 对打 · V 动作展示':!packet.playing?'已暂停 · 按 Enter 继续':show?'← / → 切换动作 · Space 重播当前动作 · Enter 暂停':packet.match_phase==='warmup'?(manual?'热身结束后可控制红方 · 按键说明在右下角':'双方热身后开始靠近 · 热身不计入回合时长'):manual?'你控制红方 · WASD 移动 · J/K/L 出拳 · H 格挡 · U/I/O 踢击':'AI 自动对打 · C 接管红方 · Space 重置站位');
-  $('result').hidden=!packet.result;
+  if(packet.controller_notice)setText('hint',packet.controller_notice);
+  $('result').hidden=!packet.result||replay.active;
   if(packet.result){
     setHTML('start','回合结束');setText('hint','按 R 开始新回合');
     $('winner').textContent=packet.result.winner===null?'平局':packet.result.winner===0?'红方获胜':'蓝方获胜';
@@ -298,6 +344,7 @@ const resize=new ResizeObserver(()=>{const rect=$('arena').getBoundingClientRect
 function draw(now){
   requestAnimationFrame(draw);const dt=Math.min(.1,(now-lastDraw)/1000);lastDraw=now;
   if(pendingPacket){const {packet,arrival}=pendingPacket;pendingPacket=null;receive(packet,arrival);}
+  drawReplay(now);
   const alpha=Math.max(0,Math.min(1,(performance.now()-receivedAt)/interpolationMs));
   if(targets.length===nodes.length)nodes.forEach((n,i)=>{n.position.lerpVectors(starts[i].p,targets[i].p,alpha);n.quaternion.slerpQuaternions(starts[i].q,targets[i].q,alpha);});
   if(following&&targets[redRoot]){
@@ -322,7 +369,7 @@ function draw(now){
     }
   }
 }
-window.__arena={get state(){return frame;},get loadedRound(){return loadedRound;},get fps(){return fps;},get bodyCount(){return nodes.length;},get held(){return [...held];},
+window.__arena={get state(){return frame;},get loadedRound(){return loadedRound;},get fps(){return fps;},get bodyCount(){return nodes.length;},get renderedRoots(){return [nodes[redRoot]?.position.toArray(),nodes[blueRoot]?.position.toArray()];},get held(){return [...held];},get replay(){return {active:replay.active,available:replay.available,clips:replay.clips.length,time:replay.time,paused:replay.paused,frames:replay.frames.length};},
   get performance(){return {quality,autoLevel,pixel_ratio:renderer.getPixelRatio(),shadows:renderer.shadowMap.enabled,triangles:renderer.info.render.triangles,draw_calls:renderer.info.render.calls,interpolation_ms:interpolationMs};},
   get graphics(){const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}};
 window.addEventListener('error',event=>{$('loading-detail').textContent=event.message;});

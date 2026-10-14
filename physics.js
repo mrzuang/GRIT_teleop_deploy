@@ -1,5 +1,5 @@
 import loadMujoco from './vendor/mujoco.js';
-import {loadPolicy,GritState} from './grit.js';
+import {ControllerBank,MODEL_CHOICES} from './controller_models.js';
 import {Planner,unpackMotions,AI_ACTION_PROBABILITIES} from './planner.js';
 import {knockdown} from './rules.js';
 import {Showcase} from './showcase.js';
@@ -7,8 +7,9 @@ import {clamp,norm,matrix,yaw,euler,smooth,slerp,mix} from './math.js';
 
 const KEY_ACTION={J:'light',K:'heavy',L:'combo',U:'kick',I:'flying_kick',O:'mixed_combo',Y:'taunt',B:'warmup'};
 const send=(packet,transfer=[])=>self.postMessage(packet,transfer),stage=text=>send({type:'state',ready:false,stage:text,can_control:true});
-let mj,model,data,config,bank,policy,actors,controls,forceBuffer,motionBuffer,force,motion;
+let mj,model,data,config,bank,actors,controls,forceBuffer,motionBuffer,force,motion;
 let playing=false,started=false,ready=false,finished=false,round=0,lastInput=performance.now(),lastKeys=new Set(),pending=[],freeFace=false;
+let controllerBank,controllerIds=['grit','grit'],controllerRequest=null,controllerNotice=null;
 let controlMode='ai',modeRequest=null,repositionRequested=false,poseRevision=0,showcase=null,showcaseJump=null;
 let roundStartedAt=null,warmupStartedAt=null,warmupUntil=0;
 let result=null,score=[0,0],events=[],points=[],seen=new Set(),impulses=new Map(),fallSince=[{},{}],grounded=[false,false],support=[0,0];
@@ -74,7 +75,7 @@ function victory(i,state){
   if(result.winner===i&&s.raiseAt===null&&!s.cancelled&&s.stableSince!==null&&elapsed-s.stableSince>=.5&&elapsed>=1.2)s.raiseAt=elapsed;
   if(s.raiseAt!==null&&(state.up<.93||state.torso_up<.92||state.grounded)){s.cancelled=true;s.raiseAt=null;}
   const ref={q:[],p:[],r:[]},stand=config.victory_stand||bank.guard,raised=config.victory_raised||stand;
-  for(let k=0;k<16;k++){
+  for(let k=0;k<controls[i].referenceFrames;k++){
     const t=elapsed+k/50,u=smooth(t),v=s.raiseAt===null?0:smooth((t-s.raiseAt)/1.6);
     ref.q.push(stand.map((x,j)=>mix(s.q[j],mix(x,raised[j],v),u)));
     ref.p.push([state.root[0],state.root[1],mix(s.z,config.stand_height||bank.guard_root[2],smooth(t/1.2))]);
@@ -137,18 +138,19 @@ function contacts(velocities){
 function actuate(){
   const qpos=data.qpos,qvel=data.qvel,ctrl=data.ctrl;
   controls.forEach((control,i)=>{const a=config.actors[i];for(let j=0;j<29;j++){
-    const torque=config.kp[j]*(control.target[j]-qpos[a.qadr[j]])-config.kd[j]*qvel[a.vadr[j]],range=config.ctrlrange[a.aadr[j]];
+    const torque=control.kp[j]*(control.target[j]-qpos[a.qadr[j]])-control.kd[j]*qvel[a.vadr[j]],range=config.ctrlrange[a.aadr[j]];
     ctrl[a.aadr[j]]=clamp(torque,range[0],range[1]);
   }});
 }
+function controllerInfo(){return controllerIds.map(id=>{const c=controllerBank.get(id);return {id,label:c.label,version:c.version,contract:c.contract,combat_actions:c.combat.allowed?.length??null,excluded:c.combat.excluded||[]};});}
 function publish(force=false){
   if(!ready)return;
   if(controlMode==='showcase'&&showcase){
     const snapshot=showcase.snapshot();
     if(!force&&snapshot.time===lastPoseTime)return;lastPoseTime=snapshot.time;
     send({type:'state',ready:true,stage:'Ready',can_control:true,playing,started,finished:false,round_index:round,
-      control_mode:'showcase',...snapshot,score:[0,0],result:null,limit:null,input_status:snapshot.showcase.phase,
-      speed,performance:profile,blue_label:'GRIT',events:[],scoring_events:[],contract,engine:'MuJoCo 3.12 WASM + GRIT ONNX'},[snapshot.poses.buffer]);return;
+      control_mode:'showcase',controllers:controllerInfo(),controller_notice:controllerNotice,...snapshot,score:[0,0],result:null,limit:null,input_status:snapshot.showcase.phase,
+      speed,performance:profile,blue_label:controllerBank.get(controllerIds[1]).label,events:[],scoring_events:[],contract,engine:'MuJoCo 3.12 WASM + '+controllerIds.map(id=>controllerBank.get(id).label).join(' / ')+' ONNX'},[snapshot.poses.buffer]);return;
   }
   const now=performance.now();if(!force&&data.time===lastPoseTime)return;lastPublish=now;lastPoseTime=data.time;
   const poses=new Float32Array(model.nbody*7),xpos=data.xpos,xquat=data.xquat,xmat=data.xmat;
@@ -159,11 +161,11 @@ function publish(force=false){
   send({type:'state',ready:true,stage:'Ready',can_control:true,playing,started,finished,round_index:round,time:data.time,limit:config.duration,
     round_time:roundStartedAt===null?0:Math.min(config.duration,data.time-roundStartedAt),round_started_at:roundStartedAt,
     match_phase:roundStartedAt===null?'warmup':'fight',warmup_remaining:Math.max(0,warmupUntil-data.time),
-    control_mode:controlMode,pose_revision:poseRevision,
+    control_mode:controlMode,pose_revision:poseRevision,controllers:controllerInfo(),controller_notice:controllerNotice,
     scene:'./assets/scene.json.gz',poses,score:score.slice(),result,actions:actors.map(a=>a.action),input_status:actors[0].pending&&actors[0].clip?.family==='kick'?'AFTER LANDING':actors[0].action,
     scene_lite:'./assets/scene-lite.json.gz',
-    speed,inference_ms:inferenceMs,blue_label:'GRIT',events:events.filter(e=>data.time-e.time_s<.8),scoring_events:points.filter(e=>data.time-e.time_s<.8),
-    events_count:events.length,points_count:points.length,contract,engine:'MuJoCo 3.12 WASM + GRIT ONNX',performance:profile,
+    speed,inference_ms:inferenceMs,blue_label:controllerBank.get(controllerIds[1]).label,events:events.filter(e=>data.time-e.time_s<.8),scoring_events:points.filter(e=>data.time-e.time_s<.8),
+    events_count:events.length,points_count:points.length,contract,engine:'MuJoCo 3.12 WASM + '+controllerIds.map(id=>controllerBank.get(id).label).join(' / ')+' ONNX',performance:profile,
     diagnostics:{torso_up:config.actors.map(a=>xmat[a.torso*9+8]),commands:actors[0].events.slice(-12),
       manual_input:{keys:[...lastKeys],velocity:actors[0].velocity.slice(),free_heading:actors[0].freeHeading,guard:actors[0].guard},
       actor_modes:actors.map(a=>a.manual?'manual':'ai'),action_counts:actors.map(a=>a.events.length),
@@ -179,7 +181,7 @@ function reset(){
   mj.mj_resetData(model,data);data.qpos.set(config.initial_qpos);mj.mj_forward(model,data);
   round++;score=[0,0];result=null;events=[];points=[];seen=new Set();impulses=new Map();fallSince=[{},{}];kickContacts=[null,null];kickUnstable=[null,null];playing=false;started=false;finished=false;pending=[];lastKeys=new Set();settle=null;
   roundStartedAt=null;warmupStartedAt=null;warmupUntil=0;
-  actors=[0,1].map(i=>new Planner(i,bank,round+6));controls=[0,1].map(()=>new GritState(config));scanSupport();
+  actors=[0,1].map(i=>{const c=controllerBank.get(controllerIds[i]);return new Planner(i,bank,round+6,{referenceFrames:c.referenceFrames,combat:c.combat});});controls=controllerIds.map(id=>controllerBank.get(id).createState());scanSupport();
   actors[0].setManual(controlMode==='manual',0.);
   actors.forEach((a,i)=>{const s=observation(i);a.heading=yaw(s.quaternion);controls[i].reset(s,s.quaternion);});
   ready=true;repositionRequested=false;poseRevision++;lastPoseTime=-1;paceWall=performance.now();paceSim=0;speed=1;publish(true);
@@ -198,12 +200,22 @@ function reposition(){
 async function tick(){
   if(loopBusy)return;loopBusy=true;const begin=performance.now();
   try{
+    if(ready&&controllerRequest){
+      const requested=controllerRequest;controllerRequest=null;playing=false;lastKeys.clear();pending=[];
+      try{
+        for(const id of requested)await controllerBank.ensure(id);
+        controllerIds=requested;contract=controllerBank.get(controllerIds[0]).contract;controllerNotice=null;
+        if(controlMode==='showcase'&&showcase){showcase.setController(controllerBank.get(controllerIds[0]));round++;started=false;lastPoseTime=-1;}
+        else reset();
+      }catch(error){controllerNotice='模型加载失败：'+error.message;}
+      publish(true);
+    }
     if(ready&&modeRequest!==null){
       const requested=modeRequest,previous=controlMode;modeRequest=null;
       lastKeys.clear();pending=[];freeFace=false;
       if(requested==='showcase'){
-        if(!showcase){stage('加载单机器人展示舞台');showcase=await Showcase.create(mj,bank);}
-        if(showcase.config.policy_sha256!==config.policy_sha256)throw new Error('展示策略配置版本不匹配，请强制刷新页面');
+        if(!showcase){stage('加载单机器人展示舞台');showcase=await Showcase.create(mj,bank,controllerBank.get(controllerIds[0]));}
+        if(showcase.controller.id!==controllerIds[0])showcase.setController(controllerBank.get(controllerIds[0]));
         if(previous!=='showcase'){showcase.select(0,true);round++;}
         controlMode='showcase';
       }else{
@@ -224,7 +236,7 @@ async function tick(){
     if(ready&&controlMode==='showcase'){
       if(playing){
         if(begin-lastInput>3000){playing=false;publish(true);return;}
-        await showcase.step(policy);const now=performance.now();
+        await showcase.step();const now=performance.now();
         profile={control_ms:now-begin,inference_ms:showcase.inferenceMs};
         if(now-paceWall>=500){speed=(showcase.data.time-paceSim)*1000/(now-paceWall);paceWall=now;paceSim=showcase.data.time;}
       }
@@ -242,7 +254,7 @@ async function tick(){
       actors[0].manualKeys=controlMode==='manual'?new Set(lastKeys):new Set();if(freeFace){actors[0].freeHeading=null;freeFace=false;}
       for(const name of pending)actors[0].request(name,data.time);pending=[];
       const refs=result?states.map((s,i)=>victory(i,s)):states.map((s,i)=>actors[i].update(data.time,s,states[1-i],actors[1-i]));
-      inferenceMs=await policy.infer(controls,states,refs);const physicsStart=performance.now();
+      inferenceMs=await controllerBank.infer(controls,states,refs);const physicsStart=performance.now();
       for(let step=0;step<40;step++){
         if(step%2===0)actuate();const velocities=result?null:effectorSpeeds();mj.mj_step(model,data);if(velocities)contacts(velocities);
       }
@@ -264,6 +276,7 @@ self.onmessage=event=>{
   const m=event.data;lastInput=performance.now();
   if(m.type==='heartbeat')return;
   if(!ready)return;
+  if(m.type==='controllers'&&Array.isArray(m.ids)&&m.ids.length===2&&m.ids.every(id=>MODEL_CHOICES.some(c=>c.id===id))){controllerRequest=m.ids;return;}
   if(m.type==='mode'){
     if(['showcase','ai','manual'].includes(m.mode))modeRequest=m.mode;
     return;
@@ -283,14 +296,14 @@ self.onmessage=event=>{
     const restart=()=>{if(loopBusy)setTimeout(restart,10);else if(controlMode==='showcase'){showcase.select(0,true);round++;started=false;lastPoseTime=-1;paceWall=performance.now();paceSim=0;publish(true);}else reset();};restart();
   }
   else if(m.type==='face'&&controlMode==='manual')freeFace=true;
-  if(m.type!=='keys'&&m.type!=='face')publish(true);
+  if(!loopBusy&&m.type!=='keys'&&m.type!=='face')publish(true);
 };
 
 async function init(){
   stage('加载 MuJoCo 与 GRIT 模型');
   config=await read('./assets/config.json');
-  [mj,bank,policy]=await Promise.all([loadMujoco(),read('./assets/motions.json.gz',true).then(unpackMotions),loadPolicy(config)]);
-  stage('校验 GRIT 控制接口');contract=await policy.validate(await read('./assets/contract-fixtures.json'));
+  [mj,bank,controllerBank]=await Promise.all([loadMujoco(),read('./assets/motions.json.gz',true).then(unpackMotions),new ControllerBank(config,stage).initialize()]);
+  stage('校验 GRIT 控制接口');contract=controllerBank.get('grit').contract;
   const response=await fetch(new URL('./assets/arena.mjb.gz',import.meta.url));
   const bytes=new Uint8Array(await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
   const vfs=new mj.MjVFS();vfs.addBuffer('arena.mjb',bytes);model=mj.MjModel.from_binary_path('arena.mjb',vfs);vfs.delete();data=new mj.MjData(model);
