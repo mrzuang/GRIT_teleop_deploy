@@ -1,0 +1,361 @@
+{
+  "policy_sha256": "39d573e970b7088275ed68ec8a9597fa9c402d98d5ad211991db7d8d0f5a82b9",
+  "mujoco_version": "3.12.0",
+  "clips": 41,
+  "pico_tempo": 1.3,
+  "attacks": 19,
+  "defences": 5,
+  "source_manifest_sha256": "c31276538a474494fa03a3046ef9d05bde52c313b982e960beebdd5b4e8f021e",
+  "files": {
+    "assets/contract-fixtures.json": {
+      "bytes": 58797,
+      "sha256": "58b06f5a64cfdecd72e09366fc2bf386619533ab97a4165f569b2e7f4b44ef99"
+    },
+    "assets/scene.json.gz": {
+      "bytes": 3272758,
+      "sha256": "d3971ab92f5b744ab1e31503b6a2008434cb665ecdef2f13e9693fb362ca621b"
+    },
+    "assets/arena.mjb.gz": {
+      "bytes": 37973941,
+      "sha256": "03c4c12ae6c6564d9992e91a6da5c37495121ec864d0ceb16a10487dfca5ada3"
+    },
+    "assets/config.json": {
+      "bytes": 10123,
+      "sha256": "f74f38e38ce9f3904be4bac06c293bf86dcc836689a80f765b0f6e09a5fabe69"
+    },
+    "assets/motions.json.gz": {
+      "bytes": 1225947,
+      "sha256": "857c766c2d2776d422e80a8d29593a228e0bb01400fd09b1800037e656996076"
+    },
+    "assets/scene-lite.json.gz": {
+      "bytes": 589191,
+      "sha256": "07c7f63ad0c12dcea156e748c8e22b4bbe53f8b3826d146928339aa304e6ecb7"
+    },
+    "assets/showcase.mjb.gz": {
+      "bytes": 37966259,
+      "sha256": "b3cf04c9388565d0e01d6978575dbc842e2e6163c9c61aee776888c6c738bb53"
+    },
+    "assets/showcase-scene-lite.json.gz": {
+      "bytes": 587429,
+      "sha256": "147b87a40fba21eb69e93daf6ae6b59073da08b82e57e5cb731a57bea4c7e04c"
+    },
+    "assets/showcase-config.json": {
+      "bytes": 4070,
+      "sha256": "7140f5b7cb10fdf731431b1eb830a7e2eb524f3aec5725857804751a131c7eeb"
+    },
+    "assets/showcase-scene.json.gz": {
+      "bytes": 3272295,
+      "sha256": "d4a06829723d8e2f9c532d4d8b413099350c8c4fffd9d792ba2ec21a9767011d"
+    },
+    "assets/policy-contract.json": {
+      "bytes": 1372,
+      "sha256": "81d7c8dca1a885b779e085008b8aec59aed817944db3c716b9d8c22083972a48"
+    },
+    "assets/policy_99000.onnx": {
+      "bytes": 9441300,
+      "sha256": "39d573e970b7088275ed68ec8a9597fa9c402d98d5ad211991db7d8d0f5a82b9"
+    }
+  },
+  "disabled_defences": [
+    "pico_guard_low",
+    "pico_guard_low_2"
+  ],
+  "punch_curation": {
+    "groups": [
+      {
+        "label": "\u76f4\u62f3",
+        "keep": [
+          "pico_jab_left_3",
+          "pico_straight_right_2"
+        ],
+        "members": [
+          "jab",
+          "cross",
+          "body_jab",
+          "body_cross",
+          "left_flicker_jab",
+          "right_flicker_straight",
+          "lunging_jab",
+          "pico_jab_left_1",
+          "pico_jab_left_2",
+          "pico_jab_left_3",
+          "pico_straight_right_1",
+          "pico_straight_right_2"
+        ]
+      },
+      {
+        "label": "\u6446\u62f3",
+        "keep": [
+          "pico_swing_left_1",
+          "pico_swing_right_1"
+        ],
+        "members": [
+          "hook",
+          "right_hook",
+          "left_body_hook",
+          "right_body_hook",
+          "left_long_hook",
+          "right_long_hook",
+          "left_short_hook",
+          "right_short_hook",
+          "pico_swing_left_1",
+          "pico_swing_left_2",
+          "pico_swing_right_1",
+          "pico_swing_right_2"
+        ]
+      },
+      {
+        "label": "\u4e0a\u52fe\u62f3",
+        "keep": [
+          "pico_uppercut_left",
+          "pico_uppercut_right"
+        ],
+        "members": [
+          "left_uppercut",
+          "right_uppercut",
+          "left_body_uppercut",
+          "right_body_uppercut",
+          "pico_uppercut_left",
+          "pico_uppercut_right",
+          "pico_hook_forward"
+        ]
+      },
+      {
+        "label": "\u4e0b\u6f5c\u52fe\u62f3",
+        "keep": [
+          "pico_duck_hook"
+        ],
+        "members": [
+          "pico_duck_hook"
+        ]
+      },
+      {
+        "label": "\u7ec4\u5408\u62f3",
+        "keep": [
+          "rapid_boxing1",
+          "pico_uppercut_combo_2"
+        ],
+        "members": [
+          "rapid_boxing1",
+          "rapid_boxing2",
+          "rapid_boxing3",
+          "pico_one_two",
+          "pico_straight_combo",
+          "pico_alternating_combo",
+          "pico_uppercut_combo_1",
+          "pico_uppercut_combo_2"
+        ]
+      },
+      {
+        "label": "\u8d8a\u80a9\u62f3",
+        "keep": [],
+        "members": [
+          "overhand",
+          "left_overhand"
+        ]
+      },
+      {
+        "label": "\u659c\u4e0a\u52fe\u62f3",
+        "keep": [],
+        "members": [
+          "shovel_hook",
+          "right_shovel_hook"
+        ]
+      },
+      {
+        "label": "\u53cd\u624b\u97ad\u62f3",
+        "keep": [],
+        "members": [
+          "backfist",
+          "left_backfist"
+        ]
+      },
+      {
+        "label": "\u4e0b\u7838\u4e0e\u5288\u62f3",
+        "keep": [],
+        "members": [
+          "hammerfist",
+          "left_hammerfist",
+          "left_chopping_punch",
+          "right_chopping_punch"
+        ]
+      },
+      {
+        "label": "\u63a8\u51fb",
+        "keep": [
+          "left_single_push"
+        ],
+        "members": [
+          "double_palm_push",
+          "left_single_push",
+          "right_single_push"
+        ]
+      },
+      {
+        "label": "\u683c\u6321\u53cd\u51fb",
+        "keep": [
+          "pico_guard_counter"
+        ],
+        "members": [
+          "pico_guard_counter"
+        ]
+      }
+    ],
+    "original_count": 54,
+    "selected_count": 11,
+    "excluded": [
+      "backfist",
+      "body_cross",
+      "body_jab",
+      "cross",
+      "double_palm_push",
+      "hammerfist",
+      "hook",
+      "jab",
+      "left_backfist",
+      "left_body_hook",
+      "left_body_uppercut",
+      "left_chopping_punch",
+      "left_flicker_jab",
+      "left_hammerfist",
+      "left_long_hook",
+      "left_overhand",
+      "left_short_hook",
+      "left_uppercut",
+      "lunging_jab",
+      "overhand",
+      "pico_alternating_combo",
+      "pico_hook_forward",
+      "pico_jab_left_1",
+      "pico_jab_left_2",
+      "pico_one_two",
+      "pico_straight_combo",
+      "pico_straight_right_1",
+      "pico_swing_left_2",
+      "pico_swing_right_2",
+      "pico_uppercut_combo_1",
+      "rapid_boxing2",
+      "rapid_boxing3",
+      "right_body_hook",
+      "right_body_uppercut",
+      "right_chopping_punch",
+      "right_flicker_straight",
+      "right_hook",
+      "right_long_hook",
+      "right_short_hook",
+      "right_shovel_hook",
+      "right_single_push",
+      "right_uppercut",
+      "shovel_hook"
+    ],
+    "basis": "Repeated takes and shared parent trajectories; keep at most two representatives per related family."
+  },
+  "kick_curation": {
+    "groups": [
+      {
+        "label": "\u6a2a\u8e22",
+        "keep": [
+          "left_round_kick",
+          "right_round_kick"
+        ],
+        "members": [
+          "left_round_kick",
+          "right_round_kick",
+          "left_low_round_kick",
+          "low_round_kick"
+        ]
+      },
+      {
+        "label": "\u4fa7\u8e22",
+        "keep": [],
+        "members": [
+          "side_kick",
+          "right_side_kick"
+        ]
+      },
+      {
+        "label": "\u8e6c\u8e22",
+        "keep": [],
+        "members": [
+          "left_push_kick",
+          "right_push_kick",
+          "left_oblique_kick",
+          "right_oblique_kick"
+        ]
+      },
+      {
+        "label": "\u626b\u8e22",
+        "keep": [],
+        "members": [
+          "left_low_sweep",
+          "right_low_sweep"
+        ]
+      },
+      {
+        "label": "\u819d\u9876",
+        "keep": [],
+        "members": [
+          "left_knee",
+          "right_knee",
+          "left_diagonal_knee",
+          "right_diagonal_knee"
+        ]
+      },
+      {
+        "label": "\u6b63\u8e22",
+        "keep": [
+          "left_front_kick",
+          "right_front_kick",
+          "left_high_front_kick",
+          "right_high_front_kick"
+        ],
+        "members": [
+          "left_front_kick",
+          "right_front_kick",
+          "left_high_front_kick",
+          "right_high_front_kick"
+        ]
+      },
+      {
+        "label": "\u540e\u8e22",
+        "keep": [
+          "back_kick"
+        ],
+        "members": [
+          "back_kick"
+        ]
+      },
+      {
+        "label": "\u98de\u8e22",
+        "keep": [
+          "spinning_kick",
+          "left_flying_kick"
+        ],
+        "members": [
+          "spinning_kick",
+          "left_flying_kick"
+        ]
+      }
+    ],
+    "selected_count": 9,
+    "excluded": [
+      "left_diagonal_knee",
+      "left_knee",
+      "left_low_round_kick",
+      "left_low_sweep",
+      "left_oblique_kick",
+      "left_push_kick",
+      "low_round_kick",
+      "right_diagonal_knee",
+      "right_knee",
+      "right_low_sweep",
+      "right_oblique_kick",
+      "right_push_kick",
+      "right_side_kick",
+      "side_kick"
+    ]
+  },
+  "policy_iteration": 99000,
+  "policy_checkpoint_sha256": "2f659759d3900841e771ed73d62af1cc0577468e71daa93edaa0d81dda81c24b",
+  "policy_file": "policy_99000.onnx"
+}
