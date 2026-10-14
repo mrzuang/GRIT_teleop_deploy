@@ -153,8 +153,8 @@
       "sha256": "36aac00d956ffd9e36cd737f45b56f4b2f753cd3a1eaf86b395357e583df4194"
     },
     "style.css": {
-      "bytes": 17026,
-      "sha256": "6bb339be3712ec22642f5512f21f9c978e56a09bfdc39db3b813122b38f6c208"
+      "bytes": 18328,
+      "sha256": "821317a71bb008d980db1123a2b2ec5fa7576f516d12ec2fbaa678bfb37e4d0d"
     },
     "vendor/MUJOCO-LICENSE.txt": {
       "bytes": 11358,
@@ -227,5 +227,11 @@
   "removed_actions": [
     "back_kick",
     "spinning_kick"
-  ]
+  ],
+  "keyboard_guide_font_px": {
+    "desktop": 14,
+    "mobile": 13,
+    "desktop_key": 13,
+    "mobile_key": 12
+  }
 }

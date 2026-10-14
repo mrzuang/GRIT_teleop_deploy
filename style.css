@@ -18,3 +18,18 @@ header{height:auto;align-items:flex-start}.brand{padding:11px 15px;gap:12px}.bra
 @media(max-width:1500px){.toolbar{max-width:calc(100% - 245px)}}
 @media(max-width:1000px){.toolbar{max-width:calc(100% - 205px)}.manual-keys>div{font-size:10px;gap:7px}.manual-keys kbd{font-size:10px}}
 @media(max-width:720px){.toolbar{max-width:100%;justify-content:flex-start}.manual-keys>div{font-size:9px;gap:6px}.manual-keys kbd{font-size:9px}}
+
+/* Readable keyboard instructions on desktop and small screens. */
+#controls-panel{width:440px;max-height:min(660px,calc(100dvh - 350px));gap:12px 18px}
+#controls-panel .help-heading h2{font-size:22px}
+#controls-panel .help-heading button{font-size:13px;padding:5px 10px}
+#controls-panel .mode-note{font-size:14px;line-height:1.65}
+#controls-panel .manual-keys h3{font-size:16px}
+#controls-panel .manual-keys h3 span{font-size:12px}
+#controls-panel .manual-keys>div{font-size:14px;gap:9px 12px}
+#controls-panel .session-keys{font-size:14px;gap:9px 12px}
+#controls-panel kbd{font-size:13px;font-weight:600}
+#controls-panel .mouse-help,#controls-panel .rules{font-size:13px;line-height:1.65}
+@media(max-width:1000px){#controls-panel{width:380px;max-height:calc(100dvh - 390px)}}
+@media(max-width:720px){#controls-panel{width:min(380px,calc(100% - 20px));max-height:calc(100dvh - 434px);gap:10px 12px}#controls-panel .help-heading h2{font-size:20px}#controls-panel .mode-note,#controls-panel .manual-keys>div,#controls-panel .session-keys{font-size:13px}#controls-panel .manual-keys h3{font-size:15px}#controls-panel kbd,#controls-panel .mouse-help,#controls-panel .rules{font-size:12px}}
+@media(max-width:359px){#controls-panel .manual-keys>div,#controls-panel .session-keys{grid-template-columns:1fr}}
