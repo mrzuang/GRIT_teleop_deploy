@@ -10,13 +10,14 @@
   "showcase_actions": 39,
   "warmup_before_approach": true,
   "attack_probabilities": {
-    "punch": 0.65,
-    "leg": 0.35
+    "guard": 0.3,
+    "leg": 0.35,
+    "punch": 0.35
   },
   "files": {
     "physics.js": {
-      "bytes": 19947,
-      "sha256": "28f9e956a2f20973707799dc57d764a889aacc2c93bc1fc30d56fb64127e096c"
+      "bytes": 20256,
+      "sha256": "48430dbce164e14f7fe5db520032b6efcfdf0a561cfd70c96fb45bedec3cd9c4"
     },
     ".nojekyll": {
       "bytes": 0,
@@ -24,7 +25,7 @@
     },
     "build-manifest.json": {
       "bytes": 8951,
-      "sha256": "1704743636290ddcaed6e6ba39f806cdc4b8387970e5a009023bc6597235ba74"
+      "sha256": "8463a43bae2f3afa928574df5e7ccbc39bedbb30089b9e66c9b46b599cd3ccff"
     },
     "rules.js": {
       "bytes": 524,
@@ -35,20 +36,20 @@
       "sha256": "cea0925b84aaf55a25d2928fd60c63581c62aeba1d6cf28a8b10fc759593d76d"
     },
     "style.css": {
-      "bytes": 13471,
-      "sha256": "82e1458c760eee2caf4545654a97915c9168c948a38b75c0f82aec8e64446ad8"
+      "bytes": 16065,
+      "sha256": "ee4645a683fc37e658913c4901c1b0bb69e7eaaceb92404c030c9be3ddaa3d2a"
     },
     "planner.js": {
-      "bytes": 13553,
-      "sha256": "e6814c0882ccb26c2625f50a19fa3479db25ed6adf0620217ebe46f2edacf700"
+      "bytes": 16226,
+      "sha256": "34f9d3e79be980abe3085c0fde409f910137a341e275d3275a00a9ec29027cdf"
     },
     "credits.html": {
       "bytes": 2721,
       "sha256": "e1d61b87110b6b4f2220e189432303da86b13469ccf6531856862c6d5d0fade5"
     },
     "demo.html": {
-      "bytes": 4967,
-      "sha256": "d402cc00b7d63bd0f39f6ee61685799e0cd971b72b7af4c9f04bdea60a761ef5"
+      "bytes": 5600,
+      "sha256": "7b92a2b0605c5a906b3474744dfb34f74999c8ff1632b52e90ae8a3a9e68684d"
     },
     "grit.js": {
       "bytes": 5087,
@@ -59,16 +60,16 @@
       "sha256": "7f5249ca011cbd09d6da346ebf2f54a226aee44d66d86e58a73b7a56796815e6"
     },
     "arena.js": {
-      "bytes": 24925,
-      "sha256": "cf30491c5574c3a41eb5f2158bc41ab14a41e8351effe94e23e9bbf10e69c6a8"
+      "bytes": 24938,
+      "sha256": "34328fd4ac039a4bd92c54ef62a0574da1c6a7a9140ff405c6213fbc678fcad7"
     },
     "showcase.js": {
       "bytes": 5415,
       "sha256": "104def2d32a51dcf17c14d4270e2503c599c0da2a6acbe06bc250ca796227ba4"
     },
     "index.html": {
-      "bytes": 4967,
-      "sha256": "d402cc00b7d63bd0f39f6ee61685799e0cd971b72b7af4c9f04bdea60a761ef5"
+      "bytes": 5600,
+      "sha256": "7b92a2b0605c5a906b3474744dfb34f74999c8ff1632b52e90ae8a3a9e68684d"
     },
     "assets/contract-fixtures.json": {
       "bytes": 58797,
@@ -107,8 +108,8 @@
       "sha256": "f74f38e38ce9f3904be4bac06c293bf86dcc836689a80f765b0f6e09a5fabe69"
     },
     "assets/motions.json.gz": {
-      "bytes": 1225947,
-      "sha256": "857c766c2d2776d422e80a8d29593a228e0bb01400fd09b1800037e656996076"
+      "bytes": 1227580,
+      "sha256": "9cf62f0f558b296bad5acb654f4aeb179b94da7e6c3add3d66f925ed70aca829"
     },
     "assets/showcase-scene.json.gz": {
       "bytes": 3272295,
@@ -198,5 +199,12 @@
       "bytes": 20856,
       "sha256": "30dd851d9c00622940500f71ddd2ff8820c5cb65270816080175b958705385a8"
     }
-  }
+  },
+  "kick_aim": {
+    "source": "calibrated G1 foot reference direction",
+    "preparation": "face and space before starting the kick",
+    "motion_correction": "bounded early heading update, original strike and landing coordination"
+  },
+  "large_top_controls": true,
+  "prominent_github_link": true
 }

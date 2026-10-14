@@ -1,7 +1,7 @@
 import {clamp,smooth,wrap,mix,norm,euler,yaw,matrix,slerp} from './math.js';
 
 const slice=(array,start,n)=>Array.from(array.subarray(start,start+n));
-export const AI_ACTION_PROBABILITIES=Object.freeze({punch:.65,leg:.35,guard:0});
+export const AI_ACTION_PROBABILITIES=Object.freeze({punch:.35,leg:.35,guard:.30});
 export function unpackMotions(bank){
   for(const [name,clip] of Object.entries(bank.clips)){
     clip.name=name;const bytes=Uint8Array.from(atob(clip.data),c=>c.charCodeAt(0));clip.values=new Float32Array(bytes.buffer);delete clip.data;
@@ -24,6 +24,7 @@ export class Planner{
     this.lastAttack=null;this.scoreIdentity=0;this.guard=false;this.lastReference=null;this.handover=null;this.events=[];
     this.aiCategory=null;this.aiSelections=[];this.aiCategoryCounts={punch:0,leg:0,guard:0};
     this.warmupUntil=0;this.facingCorrection=0;
+    this.kickSetup=null;this.kickAim=null;this.kickSetups=[];
   }
   random(){let x=this.randomState;x^=x<<13;x^=x>>>17;x^=x<<5;this.randomState=x>>>0;return this.randomState/4294967296;}
   select(values){return values[Math.min(values.length-1,Math.floor(this.random()*values.length))];}
@@ -40,11 +41,13 @@ export class Planner{
     this.heading=heading;this.freeHeading=null;this.velocity=[0,0];this.gaitPhase=0;this.gaitAmplitude=0;
     this.command=this.bank.guard.slice();this.entry=this.command.slice();this.lastReference=null;this.handover=null;
     this.currentCommand=null;this.lastAttack=null;this.nextChoice=now+.3;this.warmupUntil=0;this.facingCorrection=0;
+    this.kickSetup=null;this.kickAim=null;
     this.action=(this.manual?'YOU / ':'AI / ')+'PICO READY';
   }
   interrupt(now){
     if(this.lastReference)this.handover={time:now,q:this.lastReference.q[0].slice(),z:this.lastReference.p[0][2],r:this.lastReference.r[0].slice()};
     this.clip=null;this.sequence=[];this.action='READY';
+    this.kickSetup=null;this.kickAim=null;
   }
   beginWarmup(now,until,state,opponent){
     this.currentCommand='warmup';this.aiCategory=null;this.sequence=[];this.warmupUntil=until;
@@ -57,7 +60,7 @@ export class Planner{
     // Draw the family first, independently of distance or incoming attacks.
     // Range may choose a variant inside that family, never a different family.
     const draw=this.random();
-    const category=draw<AI_ACTION_PROBABILITIES.punch?'punch':'leg';
+    const category=draw<AI_ACTION_PROBABILITIES.punch?'punch':draw<AI_ACTION_PROBABILITIES.punch+AI_ACTION_PROBABILITIES.leg?'leg':'guard';
     let command='guard';
     if(category==='punch'){
       const variant=this.random();command=variant<.35?'light':variant<.65?'heavy':'combo';
@@ -79,10 +82,28 @@ export class Planner{
     const clip=this.bank.clips[name];if(!clip||!this.available(name,opponent))return false;
     if(clip.family==='kick'&&(state.up<.86||state.root[2]<.55||state.support===0))return false;
     this.clip=clip;this.clipTempo=clip.family==='legacy_punch'?tempo:1;this.clipStart=now;this.clipHeading=this.heading;this.facingCorrection=0;
+    if(clip.family==='kick'&&this.kickSetup?.name===name){
+      this.clipHeading=this.kickSetup.heading;
+      this.kickAim={...this.kickSetup};this.kickSetups.push({...this.kickSetup,started_at:now});this.kickSetup=null;
+    }
     this.entry=this.command.slice();this.strikeBase+=100;this.zone=zone;this.scoreIdentity++;
     if(!this.manual&&this.aiCategory)this.aiCategoryCounts[this.aiCategory]++;
     this.events.push({time_s:now,method:name,command:this.currentCommand,tempo:clip.tempo||this.clipTempo,
-      category:this.manual?null:this.aiCategory});return true;
+      category:this.manual?null:this.aiCategory,kick_aim:clip.family==='kick'?this.kickAim:null});return true;
+  }
+  aimKick(clip,state,other,bearing,distance){
+    const aim=clip.aim;
+    if(!aim)return {heading:bearing,range:.76,heading_error:0,range_error:distance-.76};
+    const target=(aim.height_m>1.22?(other.head||other.body):other.body)||other.root;
+    const velocity=other.velocity||[0,0,0],lead=Math.min(.22,aim.impact_s*.3);
+    const dx=target[0]-state.root[0]+clamp(velocity[0]*lead,-.10,.10),dy=target[1]-state.root[1]+clamp(velocity[1]*lead,-.10,.10);
+    const direction=Math.atan2(dy,dx),normal=[Math.cos(direction),Math.sin(direction)];
+    const targetOffset=(target[0]-other.root[0])*normal[0]+(target[1]-other.root[1])*normal[1];
+    // Toe reach plus the target shell's near surface; reference tracking adds
+    // uncertainty, so begin slightly inside the nominal contact radius.
+    const range=clamp(aim.reach_m+.07-targetOffset,.52,.92);
+    const heading=direction-aim.bearing_rad;
+    return {heading,range,heading_error:wrap(heading-yaw(state.quaternion)),range_error:distance-range,target:target.slice(),bearing_offset:aim.bearing_rad};
   }
   strike(now,hand,limb){
     if(!this.clip)return null;
@@ -115,11 +136,11 @@ export class Planner{
     const dx=other.root[0]-state.root[0],dy=other.root[1]-state.root[1],distance=Math.hypot(dx,dy),bearing=Math.atan2(dy,dx),actual=yaw(state.quaternion),keys=this.manualKeys;
     let turn=Number(keys.has('Q'))-Number(keys.has('E'));
     if(this.manual&&turn){if(this.freeHeading===null)this.freeHeading=actual;this.freeHeading+=turn*1.7*.02;}
-    const desired=this.freeHeading===null?bearing:this.freeHeading;this.heading=actual+clamp(wrap(desired-actual),-.044,.044);
+    let desired=this.freeHeading===null?bearing:this.freeHeading;this.heading=actual+clamp(wrap(desired-actual),-.044,.044);
     const warming=now<this.warmupUntil;
     const oldGuard=this.guard;this.guard=this.manual&&keys.has('H');
     const kicking=this.clip?.family==='kick';
-    if(this.clip&&now-this.clipStart>=this.clip.duration/this.clipTempo){this.clip=null;this.nextChoice=now+.08;}
+    if(this.clip&&now-this.clipStart>=this.clip.duration/this.clipTempo){this.clip=null;this.kickAim=null;this.nextChoice=now+.08;}
     if(this.manual){
       if(this.guard&&!oldGuard&&!kicking){this.interrupt(now);this.pending=null;}
       if(!this.guard&&oldGuard&&this.currentCommand==='guard'&&!kicking)this.interrupt(now);
@@ -135,7 +156,22 @@ export class Planner{
       // a punch. If its source becomes busy, retry only the selected command.
       this.sequence=this.choose(this.currentCommand,opponent);
     }
-    if(!this.clip&&this.sequence.length){const [name,tempo,zone]=this.sequence[0];if(this.start(name,tempo,zone,now,state,opponent))this.sequence.shift();}
+    let preparing=false;
+    if(!this.clip&&this.sequence.length){
+      const [name,tempo,zone]=this.sequence[0],next=this.bank.clips[name];
+      let canStart=true;
+      if(next.family==='kick'&&next.aim){
+        const aim=this.aimKick(next,state,other,bearing,distance);
+        const since=this.kickSetup?.name===name?this.kickSetup.since:now;
+        this.kickSetup={name,since,...aim};desired=aim.heading;
+        this.heading=actual+clamp(wrap(desired-actual),-.044,.044);
+        const aligned=Math.abs(aim.heading_error)<.18,spaced=Math.abs(aim.range_error)<.11;
+        const supported=state.support>0&&state.up>.9&&norm((state.velocity||[0,0]).slice(0,2))<.45;
+        canStart=aligned&&spaced&&supported&&now-since>=.16;
+        preparing=!canStart;
+      }
+      if(canStart&&this.start(name,tempo,zone,now,state,opponent))this.sequence.shift();
+    }
     let velocity;
     if(warming){velocity=[0,0];}
     else if(this.manual){
@@ -143,7 +179,8 @@ export class Planner{
       const speed=forward*(forward>=0?1.35:1.15),lateral=side*1.05;
       velocity=[Math.cos(desired)*speed-Math.sin(desired)*lateral,Math.sin(desired)*speed+Math.cos(desired)*lateral];
     }else{
-      const preferred=opponent.clip?.family==='kick'?1.05:.46,radial=clamp((distance-preferred)*2.6,-.5,1.2),lateral=distance<.72?.10*Math.sin(now*2):0;
+      const preferred=preparing?this.kickSetup.range:opponent.clip?.family==='kick'?.78:.46;
+      const radial=clamp((distance-preferred)*2.6,preparing?-.7:-.5,preparing?.7:1.2),lateral=preparing?0:distance<.72?.10*Math.sin(now*2):0;
       velocity=[Math.cos(bearing)*radial-Math.sin(bearing)*lateral,Math.sin(bearing)*radial+Math.cos(bearing)*lateral];
     }
     const inward=distance>1e-6?(velocity[0]*dx+velocity[1]*dy)/distance:0;
@@ -153,7 +190,12 @@ export class Planner{
     if(this.clip){
       const clip=this.clip,elapsed=(now-this.clipStart)*this.clipTempo,first=sample(clip,elapsed),full=!['legacy_punch','rapid'].includes(clip.family);
       const spinning=clip.family==='kick'&&(clip.airborne||clip.name==='back_kick');
-      if(full&&!spinning){
+      const aimedKick=clip.family==='kick'&&this.kickAim;
+      if(aimedKick&&elapsed<clip.aim.impact_s-.16){
+        const aim=this.aimKick(clip,state,other,bearing,distance);
+        this.clipHeading+=clamp(wrap(aim.heading-this.clipHeading),-.012,.012);
+      }
+      if(full&&!spinning&&!aimedKick){
         const desiredCorrection=wrap(bearing-(this.clipHeading+first.angles[2]));
         this.facingCorrection+=clamp(wrap(desiredCorrection-this.facingCorrection),-.044,.044);
       }
@@ -163,7 +205,7 @@ export class Planner{
         if(full){
           // Re-aim grounded references continuously. A rotating kick retains
           // its source turn while airborne and reacquires the opponent on landing.
-          const angle=this.clipHeading+(spinning?0:this.facingCorrection),offset=[source.p[0]-first.p[0],source.p[1]-first.p[1]];
+          const angle=this.clipHeading+(spinning||aimedKick?0:this.facingCorrection),offset=[source.p[0]-first.p[0],source.p[1]-first.p[1]];
           const p=[state.root[0]+Math.cos(angle)*offset[0]-Math.sin(angle)*offset[1],state.root[1]+Math.sin(angle)*offset[0]+Math.cos(angle)*offset[1],source.p[2]];
           source.angles[2]+=angle;let r=euler(source.angles);
           if(clip.family!=='kick'&&(norm(velocity)>.02||Math.abs(turn)>.01)){
@@ -174,7 +216,7 @@ export class Planner{
         }else{for(let j=15;j<29;j++)ref.q[k][j]=q[j];for(let j=12;j<15;j++)ref.q[k][j]=.65*q[j]+.35*ref.q[k][j];}
       }
       this.action=(this.manual?'YOU / ':'AI / ')+clip.name.toUpperCase();
-    }else this.action=(this.manual?'YOU / ':'AI / ')+(warming?'WARMUP / READY':norm(velocity)>.03?'MOVE':'PICO READY');
+    }else this.action=(this.manual?'YOU / ':'AI / ')+(warming?'WARMUP / READY':preparing?'KICK SETUP / '+this.kickSetup.name.toUpperCase():norm(velocity)>.03?'MOVE':'PICO READY');
     if(this.handover){
       for(let k=0;k<16;k++){
         const blend=smooth((now-this.handover.time+k/50)/.12);ref.q[k]=ref.q[k].map((v,j)=>mix(this.handover.q[j],v,blend));
@@ -182,7 +224,7 @@ export class Planner{
       }
       if(now-this.handover.time>=.12)this.handover=null;
     }
-    const rotating=this.clip?.family==='kick'&&(this.clip.airborne||this.clip.name==='back_kick');
+    const rotating=preparing||this.clip?.family==='kick';
     if(!rotating){
       const chestError=wrap(bearing-(state.facing_yaw??actual));
       const correction=clamp(chestError*.4,-.22,.22);

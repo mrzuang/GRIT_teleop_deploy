@@ -21,9 +21,11 @@ async function read(url,gzip=false){const response=await fetch(new URL(url,impor
 function observation(i){
   const a=config.actors[i],qpos=data.qpos,qvel=data.qvel,sensors=data.sensordata,xmat=data.xmat;
   const root=Array.from(qpos.slice(a.root_qadr,a.root_qadr+7)),quaternion=root.slice(3);
+  const geom=data.geom_xpos;
   return {root,quaternion,joints:a.qadr.map(j=>qpos[j]),joint_velocity:a.vadr.map(j=>qvel[j]),
     gyro:Array.from(sensors.slice(a.gyro_adr,a.gyro_adr+3)),velocity:Array.from(qvel.slice(a.root_vadr,a.root_vadr+3)),
-    up:matrix(quaternion)[8],torso_up:xmat[a.torso*9+8],facing_yaw:Math.atan2(xmat[a.torso*9+3],xmat[a.torso*9]),support:support[i],grounded:grounded[i]};
+    up:matrix(quaternion)[8],torso_up:xmat[a.torso*9+8],facing_yaw:Math.atan2(xmat[a.torso*9+3],xmat[a.torso*9]),support:support[i],grounded:grounded[i],
+    body:Array.from(geom.slice(a.body*3,a.body*3+3)),head:Array.from(geom.slice(a.head*3,a.head*3+3))};
 }
 function scanSupport(){
   grounded=[false,false];const feet=[new Set(),new Set()];
@@ -122,7 +124,7 @@ function contacts(velocities){
       if(ledger.impulse>=.08&&speed>.35&&kickContacts[1-player]&&data.time-kickContacts[1-player].time>.02){kickContacts[1-player]=null;kickUnstable[1-player]=null;}
       if(seen.has(key))continue;
       if(ledger.impulse<.025||ledger.speed<.4)continue;
-      seen.add(key);const position=Array.from(c.pos),event={id:events.length,time_s:data.time,player,hand,limb,kind,zone,position};events.push(event);
+      seen.add(key);const position=Array.from(c.pos),event={id:events.length,time_s:data.time,player,hand,limb,kind,zone,position,method:attack.kind,strike_id:attack.id};events.push(event);
       const scoreKey=`score:${player}:${attack.id}`;
       if(kind==='hit'&&['head','body','thigh'].includes(zone)&&!seen.has(scoreKey)){
         seen.add(scoreKey);score[player]++;points.push({id:points.length,time_s:data.time,player,reason:zone+'_hit',score:score.slice()});
@@ -165,6 +167,7 @@ function publish(force=false){
     diagnostics:{torso_up:config.actors.map(a=>xmat[a.torso*9+8]),commands:actors[0].events.slice(-12),
       actor_modes:actors.map(a=>a.manual?'manual':'ai'),action_counts:actors.map(a=>a.events.length),
       ai_action_probabilities:AI_ACTION_PROBABILITIES,category_counts:actors.map(a=>a.aiCategoryCounts),
+      kick_setups:actors.map(a=>a.kickSetup),leg_contact_counts:actors.map((_,i)=>events.filter(e=>e.player===i&&e.limb==='leg').length),
       facing_error_deg:actors.map((a,i)=>{
         const own=config.actors[i],other=config.actors[1-i],bearing=Math.atan2(xpos[other.pelvis*3+1]-xpos[own.pelvis*3+1],xpos[other.pelvis*3]-xpos[own.pelvis*3]);
         const yaw=Math.atan2(xmat[own.torso*9+3],xmat[own.torso*9]);return Math.abs(Math.atan2(Math.sin(bearing-yaw),Math.cos(bearing-yaw)))*180/Math.PI;

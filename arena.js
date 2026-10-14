@@ -233,7 +233,7 @@ function receive(packet,arrival=performance.now()){
   const show=packet.control_mode==='showcase',ai=!show;
   $('mode').setAttribute('aria-pressed',String(ai));$('showcase').setAttribute('aria-pressed',String(show));
   setText('red-label','红方 · AI');setText('red-action-label',show?'展示动作':'红方动作');
-  setText('mode-note',show?'单机器人依次播放全部可用动作；每段结束后回到舞台中央。可用左右方向键或下拉菜单选择动作。':'双方先热身再靠近，按出拳 65%、出腿 35% 选招，并持续朝向对手。Enter 暂停/继续，空格重置站位。');
+  setText('mode-note',show?'单机器人依次播放全部可用动作；每段结束后回到舞台中央。可用左右方向键或下拉菜单选择动作。':'双方先热身再靠近，按格挡 30%、踢腿 35%、出拳 35% 选招，并持续朝向对手。Enter 暂停/继续，空格重置站位。');
   $('scoreboard').hidden=show;$('showcase-panel').hidden=!show;$('blue-action-row').hidden=show;
   if(show&&packet.showcase){
     const s=packet.showcase;setText('showcase-name',s.label);setText('showcase-counter',`${s.index+1} / ${s.total} · 第 ${s.lap} 轮`);
