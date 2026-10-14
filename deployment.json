@@ -21,8 +21,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "arena.js": {
-      "bytes": 30896,
-      "sha256": "f6bcc10fd3a4de4327cd5ac34ab804b2c7503a31adb996f3034265ef24a39063"
+      "bytes": 31987,
+      "sha256": "269703e97a2103aa4f128d5df78d29815ebc0b08d100a6b4fa4498a87d2aed58"
     },
     "assets/arena.mjb.gz": {
       "bytes": 37973941,
@@ -121,24 +121,24 @@
       "sha256": "de51cb126977cfbe3c4c0023657785100a32d1d61f5fe80db9a3d8f50123bbae"
     },
     "demo.html": {
-      "bytes": 8540,
-      "sha256": "4c6100d16dea7f7238ac43f4c9e1a1b09e8be7022a06e8e842fc13fd3e95d84a"
+      "bytes": 8962,
+      "sha256": "bbcccb9f6e8c806ddad054f862416eab20a3142fa694b73711c08b44a37f902d"
     },
     "grit.js": {
       "bytes": 5087,
       "sha256": "ac26a657019ea84cf252d473c50d9d96599cb1930acf17cb9dd7666be154d178"
     },
     "index.html": {
-      "bytes": 8540,
-      "sha256": "4c6100d16dea7f7238ac43f4c9e1a1b09e8be7022a06e8e842fc13fd3e95d84a"
+      "bytes": 8962,
+      "sha256": "bbcccb9f6e8c806ddad054f862416eab20a3142fa694b73711c08b44a37f902d"
     },
     "math.js": {
       "bytes": 2333,
       "sha256": "cea0925b84aaf55a25d2928fd60c63581c62aeba1d6cf28a8b10fc759593d76d"
     },
     "physics.js": {
-      "bytes": 22128,
-      "sha256": "c2d71eb58bb23a191ee89b050c0e482e15babd6f9304a8829c3d65e6cde218d0"
+      "bytes": 22691,
+      "sha256": "5994c3314ff6aef2e3cfa1e4070a8f7810a0c48a06c84f6999ae236a060df320"
     },
     "planner.js": {
       "bytes": 18098,
@@ -197,8 +197,8 @@
       "sha256": "36aac00d956ffd9e36cd737f45b56f4b2f753cd3a1eaf86b395357e583df4194"
     },
     "style.css": {
-      "bytes": 22000,
-      "sha256": "0fc816e706c4bb3215fdc2e379ceabb4c805e648db9ed6843d1a4216d6545b1f"
+      "bytes": 23479,
+      "sha256": "135921cc3b9308e005005040ad2d598017386bfbce4b9f80bae91d4a61ea16bd"
     },
     "vendor/HEFT-LICENSE.txt": {
       "bytes": 1062,
@@ -384,5 +384,13 @@
     "counts_only_finished_rounds": true,
     "no_user_forms": true,
     "no_rankings": true
+  },
+  "controller_selection": {
+    "position": "left",
+    "when": "before_match",
+    "hidden_during_match": true,
+    "locked_while_paused": true,
+    "restart_to_change": true,
+    "showcase_selector_preserved": true
   }
 }

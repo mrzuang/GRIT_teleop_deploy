@@ -20,10 +20,16 @@
   </div>
   <canvas id="canvas" tabindex="0" aria-label="G1 格斗三维场景"></canvas>
   <section id="scoreboard" class="scoreboard" aria-label="比分板">
-    <div id="red-panel" class="score red"><div><span id="red-label">红方 · AI</span><small id="red-controller">GRIT 99000</small><select id="red-policy" class="policy-select" aria-label="红方小脑模型" title="更换模型会重开回合" disabled><option value="grit">GRIT</option><option value="sonic">SONIC</option><option value="heft">HEFT</option></select></div><strong id="red-score">0</strong><em id="red-hit"></em></div>
+    <div id="red-panel" class="score red"><div><span id="red-label">红方 · AI</span><small id="red-controller">GRIT 99000</small></div><strong id="red-score">0</strong><em id="red-hit"></em></div>
     <div class="clock"><small id="round">ROUND 01</small><strong id="timer">01:00</strong><span id="status">准备中</span></div>
-    <div id="blue-panel" class="score blue"><strong id="blue-score">0</strong><div><span>蓝方 · AI</span><small id="blue-label">GRIT 99000</small><select id="blue-policy" class="policy-select" aria-label="蓝方小脑模型" title="更换模型会重开回合" disabled><option value="grit">GRIT</option><option value="sonic">SONIC</option><option value="heft">HEFT</option></select></div><em id="blue-hit"></em></div>
+    <div id="blue-panel" class="score blue"><strong id="blue-score">0</strong><div><span>蓝方 · AI</span><small id="blue-label">GRIT 99000</small></div><em id="blue-hit"></em></div>
   </section>
+  <aside id="match-setup" class="match-setup" aria-label="赛前策略模型选择">
+    <h2>赛前选择</h2><p>为双方选择小脑模型</p>
+    <label class="setup-red"><span>红方模型</span><select id="red-policy" class="policy-select" aria-label="红方小脑模型" title="仅在比赛开始前选择红方小脑" disabled><option value="grit">GRIT</option><option value="sonic">SONIC</option><option value="heft">HEFT</option></select></label>
+    <label class="setup-blue"><span>蓝方模型</span><select id="blue-policy" class="policy-select" aria-label="蓝方小脑模型" title="仅在比赛开始前选择蓝方小脑" disabled><option value="grit">GRIT</option><option value="sonic">SONIC</option><option value="heft">HEFT</option></select></label>
+    <small id="setup-status" aria-live="polite">选好后按 Enter 开始对战</small>
+  </aside>
   <section id="showcase-panel" class="showcase-panel" hidden>
     <div class="showcase-title"><span class="showcase-policy">展示小脑<select id="showcase-policy" class="policy-select" aria-label="动作展示小脑模型" disabled><option value="grit">GRIT</option><option value="sonic">SONIC</option><option value="heft">HEFT</option></select></span><strong id="showcase-name">准备中</strong><small id="showcase-counter">0 / 0</small></div>
     <progress id="showcase-progress" max="1" value="0"></progress>
@@ -47,7 +53,7 @@
   </section>
   <div class="session-keys"><span><kbd>C</kbd> 手动对打</span><span><kbd>P</kbd> AI 对打</span><span><kbd>V</kbd> 动作展示</span><span><kbd>Enter</kbd> 暂停 / 继续</span><span><kbd>Space</kbd> 重置站位</span><span><kbd>←</kbd> / <kbd>→</kbd> 切换展示动作</span><span><kbd>R</kbd> / <kbd>⌫</kbd> 重开</span><span><kbd>M</kbd> 音效开关</span><span><kbd>T</kbd> 精彩慢动作回放</span><span><kbd>?</kbd> 展开 / 收起说明</span></div>
   <p class="mouse-help">鼠标拖动旋转视角 · 滚轮缩放</p>
-  <p class="rules">比分板可分别选择双方小脑，更换模型会重开回合。比赛跳过该模型不稳定的动作，展示保留全部动作。<br>对打：头 / 躯干 / 大腿命中 +1，倒地立即判负，满一分钟比分决胜。<br>Space 回到开场站位，保留比分和计时；展示时重新播放当前动作。</p>
+  <p class="rules">比赛前在左侧选择双方小脑，开始后本局锁定；按 R 重开后可重新选择。比赛跳过该模型不稳定的动作，展示保留全部动作。<br>对打：头 / 躯干 / 大腿命中 +1，倒地立即判负，满一分钟比分决胜。<br>Space 回到开场站位，保留比分和计时；展示时重新播放当前动作。</p>
 </footer>
 </body>
 </html>

@@ -55,3 +55,8 @@ body:has(.showcase-panel:not([hidden])) #controls-panel{max-height:min(660px,cal
 .brand{flex-shrink:0}.brand h1{white-space:nowrap}
 
 .site-stats{z-index:4}
+
+/* Controller choices are a left-side pre-match step, outside the score display. */
+.match-setup{position:absolute;top:144px;left:20px;width:240px;padding:17px;border:1px solid #61708066;border-radius:12px;background:#101b2be8;backdrop-filter:blur(9px);z-index:1}.match-setup h2{margin:0;font-size:18px;font-weight:650;color:#f2cd83}.match-setup>p{margin:5px 0 15px;color:#9cafc6;font-size:12px}.match-setup label{display:block;margin:12px 0}.match-setup label>span{display:block;margin-bottom:6px;font-size:13px;font-weight:600}.setup-red>span{color:#ff9ba6}.setup-blue>span{color:#98d4ff}.match-setup .policy-select{width:100%;padding:7px 10px;font-size:15px;min-height:36px}.match-setup .policy-select:disabled{opacity:.5;cursor:wait}.match-setup>small{display:block;color:#b3c2d4;font-size:12px;line-height:1.6;margin-top:14px}.match-preparation .hint{display:none}
+@media(max-width:1200px){.match-setup{top:282px}}
+@media(max-width:720px){.match-setup{top:310px;left:10px;width:calc(100% - 20px);padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.match-setup h2{font-size:16px;grid-column:1/-1}.match-setup>p{display:none}.match-setup label{margin:0}.match-setup label>span{font-size:12px;margin-bottom:4px}.match-setup .policy-select{font-size:14px;padding:5px 8px;min-height:32px}.match-setup>small{grid-column:1/-1;margin:0;font-size:11px}.match-preparation .camera-tools{top:470px}.match-preparation #controls-panel{max-height:calc(100dvh - 530px)}}

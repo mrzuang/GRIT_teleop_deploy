@@ -7,6 +7,7 @@ const elements=new Map(),$=id=>{if(!elements.has(id))elements.set(id,document.ge
 const held=new Set(),actionKeys=new Set('W S A D Q E J K L H U I O Y B'.split(' ')),uiValues=new Map();
 function setText(id,value){const key=id+':text';if(uiValues.get(key)!==value){$(id).textContent=value;uiValues.set(key,value);uiValues.delete(id+':html');}}
 function setHTML(id,value){const key=id+':html';if(uiValues.get(key)!==value){$(id).innerHTML=value;uiValues.set(key,value);uiValues.delete(id+':text');}}
+let pendingControllerSelection=null;
 let socket, frame=null, round=null, loadingRound=null, loadedRound=null, canControl=false, inputSeq=0;
 let nodes=[], targets=[], starts=[], receivedAt=0, redRoot=0, blueRoot=0, following=true;
 let pendingPacket=null,poseTime=-1,interpolationMs=20,sceneSource=null,sceneLoadToken=0,quality='auto',autoLevel=2,slowSeconds=0,fastSeconds=0;
@@ -95,7 +96,7 @@ async function loadScene(packet){
     $('manual').disabled=!canControl;
     $('showcase').disabled=!canControl;
     $('reposition').disabled=!canControl;
-    for(const id of ['red-policy','blue-policy','showcase-policy'])$(id).disabled=!canControl;
+    updateControllerSetup(frame);
     if(!softwareGraphics&&renderer.compileAsync)renderer.compileAsync(world,camera).catch(()=>{});
   }catch(error){$('loading-detail').textContent=error.message;loadingRound=null;}
 }
@@ -162,10 +163,10 @@ function send(message){socket?.postMessage(message);}
 function sendKeys(){if(canControl)send({type:'keys',seq:++inputSeq,keys:[...held]});paintKeys();}
 function clearKeys(){held.clear();sendKeys();}
 function paintKeys(){document.querySelectorAll('[data-key]').forEach(b=>b.classList.toggle('held',held.has(b.dataset.key)));}
-function command(type){if(!canControl)return;finishReplay(false);void sounds.unlock();clearKeys();send({type});}
+function command(type){if(!canControl||pendingControllerSelection)return;finishReplay(false);void sounds.unlock();clearKeys();send({type});}
 function pause(){if(replay.active){replay.paused=true;setText('replay-pause','继续回放');}if(canControl){clearKeys();send({type:'pause'});}}
 function chooseMode(mode){
-  if(!canControl||!frame?.ready||loadedRound!==frame.round_index)return;
+  if(!canControl||pendingControllerSelection||!frame?.ready||loadedRound!==frame.round_index)return;
   finishReplay(false);void sounds.unlock();clearKeys();send({type:'mode',mode});
 }
 function showHelp(show){$('controls-panel').hidden=!show;$('help').setAttribute('aria-expanded',String(show));}
@@ -230,10 +231,19 @@ function drawReplay(now){
 }
 $('highlights').onclick=startReplay;$('replay-close').onclick=()=>finishReplay(true);$('replay-pause').onclick=toggleReplayPause;
 $('replay-speed').onchange=()=>{replay.speed=Number($('replay-speed').value);$('canvas').focus({preventScroll:true});};
+function updateControllerSetup(packet){
+  const show=packet?.control_mode==='showcase',beforeMatch=!show&&!packet?.started;
+  const blocked=!canControl||!packet?.ready||loadedRound!==packet.round_index||!!pendingControllerSelection;
+  $('red-policy').disabled=blocked||!beforeMatch;$('blue-policy').disabled=blocked||!beforeMatch;
+  $('showcase-policy').disabled=blocked||!show;
+  $('match-setup').hidden=!beforeMatch;document.body.classList.toggle('match-preparation',beforeMatch);
+  setText('setup-status',pendingControllerSelection?'正在加载所选模型…':blocked?'正在准备模型…':'选好后按 Enter 开始对战');
+  if(pendingControllerSelection)for(const id of ['start','manual','mode','showcase'])$(id).disabled=true;
+}
 function selectController(index,id){
-  if(!frame?.ready||loadedRound!==frame.round_index)return;
+  if(!frame?.ready||pendingControllerSelection||loadedRound!==frame.round_index||(frame.control_mode!=='showcase'&&frame.started))return;
   finishReplay(false);clearKeys();const ids=(frame.controllers||[{id:'grit'},{id:'grit'}]).map(c=>c.id);ids[index]=id;
-  for(const key of ['red-policy','blue-policy','showcase-policy'])$(key).disabled=true;
+  pendingControllerSelection={ids,round:frame.round_index};updateControllerSetup(frame);
   send({type:'controllers',ids});$('canvas').focus({preventScroll:true});
 }
 $('red-policy').onchange=()=>selectController(0,$('red-policy').value);
@@ -276,10 +286,11 @@ function feedback(packet){
 function receive(packet,arrival=performance.now()){
   statistics.record(packet);frame=packet;lastPacketAt=performance.now();canControl=packet.can_control;
   if(packet.controllers){
+    if(pendingControllerSelection&&(packet.controller_notice||(packet.round_index>pendingControllerSelection.round&&packet.controllers.every((c,i)=>c.id===pendingControllerSelection.ids[i]))))pendingControllerSelection=null;
     const [red,blue]=packet.controllers;
-    for(const [id,c] of [['red-controller',red],['blue-label',blue]])setText(id,c.version.split(' · ')[0]);
+    for(const [id,c] of [['red-controller',red],['blue-label',blue]])setText(id,`${c.label} ${c.version.split(' · ')[0]}`);
     $('red-policy').value=red.id;$('blue-policy').value=blue.id;$('showcase-policy').value=red.id;
-    for(const [id,c] of [['red-policy',red],['blue-policy',blue],['showcase-policy',red]])$(id).title=`${c.label} ${c.version} · 比赛可用 ${c.combat_actions??37}/37 段 · 更换模型会重开回合`;
+    for(const [id,c] of [['red-policy',red],['blue-policy',blue],['showcase-policy',red]])$(id).title=`${c.label} ${c.version} · 比赛可用 ${c.combat_actions??37}/37 段 · ${id==='showcase-policy'?'选择展示小脑':'仅赛前可更换，本局开始后锁定'}`;
     setHTML('title',`${red.label} <span>vs</span> ${blue.label}`);
     $('title').title=`${red.label} ${red.version} vs ${blue.label} ${blue.version}`;
   }
@@ -291,7 +302,7 @@ function receive(packet,arrival=performance.now()){
   $('manual').disabled=!ready||!canControl;
   $('mode').disabled=!ready||!canControl;
   $('showcase').disabled=!ready||!canControl;
-  for(const id of ['red-policy','blue-policy','showcase-policy'])$(id).disabled=!ready||!canControl;
+  updateControllerSetup(packet);
   const show=packet.control_mode==='showcase',manual=packet.control_mode==='manual',ai=packet.control_mode==='ai';
   if(packet.control_mode!==displayedControlMode){displayedControlMode=packet.control_mode;clearKeys();}
   $('manual').setAttribute('aria-pressed',String(manual));
@@ -332,7 +343,7 @@ function receive(packet,arrival=performance.now()){
   $('timer').style.color=remaining!==null&&remaining<=10?'#f2cd83':'';
   setText('status',packet.result?'回合结束':!packet.started?'等待开始':packet.playing?(packet.match_phase==='warmup'?'双方热身中':manual?'你 vs AI':'AI 对打中'):'已暂停');
   setText('red-action',packet.actions[0]);setText('blue-action',packet.actions[1]);
-  setText('hint',!packet.started?'C 手动对打 · P AI 对打 · V 动作展示':!packet.playing?'已暂停 · 按 Enter 继续':show?'← / → 切换动作 · Space 重播当前动作 · Enter 暂停':packet.match_phase==='warmup'?(manual?'热身结束后可控制红方 · 按键说明在右下角':'双方热身后开始靠近 · 热身不计入回合时长'):manual?'你控制红方 · WASD 移动 · J/K/L 出拳 · H 格挡 · U/I/O 踢击':'AI 自动对打 · C 接管红方 · Space 重置站位');
+  setText('hint',!packet.started?'在左侧选好双方模型 · Enter 开始对战':!packet.playing?'已暂停 · 按 Enter 继续':show?'← / → 切换动作 · Space 重播当前动作 · Enter 暂停':packet.match_phase==='warmup'?(manual?'热身结束后可控制红方 · 按键说明在右下角':'双方热身后开始靠近 · 热身不计入回合时长'):manual?'你控制红方 · WASD 移动 · J/K/L 出拳 · H 格挡 · U/I/O 踢击':'AI 自动对打 · C 接管红方 · Space 重置站位');
   if(packet.controller_notice)setText('hint',packet.controller_notice);
   $('result').hidden=!packet.result||replay.active;
   if(packet.result){

@@ -9,7 +9,7 @@ const KEY_ACTION={J:'light',K:'heavy',L:'combo',U:'kick',I:'flying_kick',O:'mixe
 const send=(packet,transfer=[])=>self.postMessage(packet,transfer),stage=text=>send({type:'state',ready:false,stage:text,can_control:true});
 let mj,model,data,config,bank,actors,controls,forceBuffer,motionBuffer,force,motion;
 let playing=false,started=false,ready=false,finished=false,round=0,lastInput=performance.now(),lastKeys=new Set(),pending=[],freeFace=false;
-let controllerBank,controllerIds=['grit','grit'],controllerRequest=null,controllerNotice=null;
+let controllerBank,controllerIds=['grit','grit'],controllerRequest=null,controllerNotice=null,controllerLoading=false;
 let controlMode='ai',modeRequest=null,repositionRequested=false,poseRevision=0,showcase=null,showcaseJump=null;
 let roundStartedAt=null,warmupStartedAt=null,warmupUntil=0;
 let result=null,score=[0,0],events=[],points=[],seen=new Set(),impulses=new Map(),fallSince=[{},{}],grounded=[false,false],support=[0,0];
@@ -180,7 +180,7 @@ function publish(force=false){
 function reset(){
   mj.mj_resetData(model,data);data.qpos.set(config.initial_qpos);mj.mj_forward(model,data);
   round++;score=[0,0];result=null;events=[];points=[];seen=new Set();impulses=new Map();fallSince=[{},{}];kickContacts=[null,null];kickUnstable=[null,null];playing=false;started=false;finished=false;pending=[];lastKeys=new Set();settle=null;
-  roundStartedAt=null;warmupStartedAt=null;warmupUntil=0;
+  roundStartedAt=null;warmupStartedAt=null;warmupUntil=0;controllerNotice=null;
   actors=[0,1].map(i=>{const c=controllerBank.get(controllerIds[i]);return new Planner(i,bank,round+6,{referenceFrames:c.referenceFrames,combat:c.combat});});controls=controllerIds.map(id=>controllerBank.get(id).createState());scanSupport();
   actors[0].setManual(controlMode==='manual',0.);
   actors.forEach((a,i)=>{const s=observation(i);a.heading=yaw(s.quaternion);controls[i].reset(s,s.quaternion);});
@@ -200,14 +200,16 @@ function reposition(){
 async function tick(){
   if(loopBusy)return;loopBusy=true;const begin=performance.now();
   try{
+    if(controllerRequest&&controlMode!=='showcase'&&started){controllerRequest=null;controllerNotice='本局模型已锁定，按 R 重开后再选择';publish(true);}
     if(ready&&controllerRequest){
-      const requested=controllerRequest;controllerRequest=null;playing=false;lastKeys.clear();pending=[];
+      const requested=controllerRequest;controllerRequest=null;controllerLoading=true;playing=false;lastKeys.clear();pending=[];
       try{
         for(const id of requested)await controllerBank.ensure(id);
         controllerIds=requested;contract=controllerBank.get(controllerIds[0]).contract;controllerNotice=null;
         if(controlMode==='showcase'&&showcase){showcase.setController(controllerBank.get(controllerIds[0]));round++;started=false;lastPoseTime=-1;}
         else reset();
       }catch(error){controllerNotice='模型加载失败：'+error.message;}
+      finally{controllerLoading=false;}
       publish(true);
     }
     if(ready&&modeRequest!==null){
@@ -276,7 +278,11 @@ self.onmessage=event=>{
   const m=event.data;lastInput=performance.now();
   if(m.type==='heartbeat')return;
   if(!ready)return;
-  if(m.type==='controllers'&&Array.isArray(m.ids)&&m.ids.length===2&&m.ids.every(id=>MODEL_CHOICES.some(c=>c.id===id))){controllerRequest=m.ids;return;}
+  if(m.type==='controllers'&&Array.isArray(m.ids)&&m.ids.length===2&&m.ids.every(id=>MODEL_CHOICES.some(c=>c.id===id))){
+    if(controllerLoading||(controlMode!=='showcase'&&started)){controllerNotice='本局模型已锁定，按 R 重开后再选择';if(!loopBusy)publish(true);return;}
+    controllerRequest=m.ids;return;
+  }
+  if((controllerRequest||controllerLoading)&&['toggle','mode','restart','reposition'].includes(m.type))return;
   if(m.type==='mode'){
     if(['showcase','ai','manual'].includes(m.mode))modeRequest=m.mode;
     return;
