@@ -11,6 +11,14 @@ Static browser demo for [GRIT](https://github.com/mrzuang/GRIT_teleop_deploy). B
 
 Large resources load in parallel and are cached by SHA256 in browser Cache Storage. The unchanged binary physics scene loads through MEMFS, avoiding the old per-byte conversion. Local Chrome measurements improved from about 28.6 seconds to 3.1 seconds on first load and 1.9 seconds with the asset cache; first internet downloads still depend on network speed. No simulation geometry or policy weights were changed by this optimization.
 
-Public demo: https://mrzuang.github.io/GRIT_teleop_deploy/ . This gh-pages branch contains the static website and runtime assets. GitHub Pages serves its root directory.
+Public demo: https://mrzuang.github.io/GRIT_teleop_deploy/ . The `fight-demo` branch contains the static website and runtime assets. GitHub Pages publishes the root directory of `gh-pages`, which must be kept in sync with `fight-demo`.
+
+To publish an update, commit the site changes on `fight-demo`, then push that commit to both branches:
+
+```sh
+git push origin fight-demo:fight-demo fight-demo:gh-pages
+```
+
+In **Settings → Pages**, keep **Deploy from a branch**, branch **gh-pages**, folder **/ (root)**. Keep the `gh-pages` branch: deleting or renaming the configured publishing branch takes the public demo offline, even while `fight-demo` still contains the complete site. Wait for the **pages build and deployment** workflow to finish before checking the public URL.
 
 See [credits.html](credits.html) and vendor licenses for provenance. deployment.json records this release's content hashes.
