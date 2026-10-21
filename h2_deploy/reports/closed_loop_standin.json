@@ -1,0 +1,11 @@
+{
+  "seconds": 21.5,
+  "handoff": true,
+  "gantry_released": true,
+  "pelvis_xy_m": [
+    7.864,
+    8.141
+  ],
+  "pelvis_height_m": 0.249,
+  "pelvis_up_z": -0.0246
+}

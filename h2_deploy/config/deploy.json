@@ -1,0 +1,17 @@
+{
+  "udp": {
+    "state_bind_host": "0.0.0.0",
+    "state_port": 55101,
+    "cmd_host": "127.0.0.1",
+    "cmd_port": 55102
+  },
+  "prepare_seconds": 3.0,
+  "damping_kd": 8.0,
+  "damping_seconds": 0.5,
+  "bridge_command_timeout_s": 0.2,
+  "safety": {
+    "state_timeout_s": 0.25,
+    "max_tilt_deg": 45.0,
+    "joint_limit_margin_rad": 0.05
+  }
+}

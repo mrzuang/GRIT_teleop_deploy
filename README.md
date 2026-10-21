@@ -7,6 +7,9 @@ whole-body motion-tracking control algorithm for humanoid robots. The policy
 inference process communicates through a unified UDP interface, enabling the
 robot to track an operator's full-body motion using PICO.
 
+**Branch `h2`:** Unitree H2 deployment (sim2sim + sim2real) is in
+[`h2_deploy/`](h2_deploy/README.md); start with `h2_deploy/scripts/setup_env.sh`.
+
 This repository includes:
 
 - the GRIT ONNX policy and its deployment contract

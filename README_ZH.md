@@ -4,6 +4,8 @@
 
 本仓库是面向人形机器人全身跟踪运动控制算法GRIT v0.0.1 的Unitree G1 部署代码。策略推理进程通过统一的 UDP 接口，使用PICO即可实现人和机器人的全身运动跟踪控制。
 
+**`h2` 分支：** Unitree H2 部署包（sim2sim + sim2real）在 [`h2_deploy/`](h2_deploy/README.md)，从 `h2_deploy/scripts/setup_env.sh` 开始。
+
 本仓库包含：
 
 - GRIT ONNX 策略及其配置文件

@@ -1,0 +1,22 @@
+{
+  "policy": "h2_policy.onnx",
+  "motion": "motions/walk_stand_start_stop_12s.npz",
+  "start_frame": 0,
+  "last_frame": 599,
+  "simulation_seconds": 11.98,
+  "action_delay_physics_steps": 0,
+  "resets": 0,
+  "state_finite": true,
+  "root_error_mean_m": 0.11867731486551775,
+  "root_error_final_m": 0.271324070082081,
+  "first_root_tracking_failure_s": null,
+  "mujoco_warning_counts": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ]
+}

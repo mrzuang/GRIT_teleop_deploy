@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "net": "lo",
+  "state_mapping_joints": 31,
+  "command_mapping_joints": 31,
+  "unused_slots_zero": true,
+  "example": {
+    "waist_pitch_joint": {
+      "dds_slot": 14
+    },
+    "head_pitch_joint": {
+      "dds_slot": 29
+    },
+    "left_shoulder_pitch_joint": {
+      "dds_slot": 15
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "static": {
+    "onnx_sha256": "4f5541e49f7df55223f315b0decc1d6d065b8ced62b2a1c70e57edfd2fce4e31",
+    "motions": {
+      "stand_hold_10s.npz": {
+        "seconds": 10.0,
+        "peak_speed_m_s": 0.0,
+        "distance_m": 0.0
+      },
+      "walk_stand_start_stop_12s.npz": {
+        "seconds": 12.0,
+        "peak_speed_m_s": 1.76,
+        "distance_m": 11.01
+      }
+    }
+  },
+  "sim2sim": {
+    "stand_hold_10s.npz": {
+      "root_error_mean_m": 0.057,
+      "root_error_final_m": 0.064
+    },
+    "walk_stand_start_stop_12s.npz": {
+      "root_error_mean_m": 0.119,
+      "root_error_final_m": 0.271
+    }
+  },
+  "closed_loop_standin": {
+    "policy_steps": 700,
+    "reference_frames_tracked": 600,
+    "min_pelvis_up_z_while_tracking": 0.976,
+    "control_period_ms_mean_max": [
+      20.0,
+      27.12
+    ],
+    "heading_alignment": "rotated by +40.1 deg to match the IMU. x / stop = damping."
+  },
+  "bridge_loopback": "passed",
+  "status": "passed"
+}

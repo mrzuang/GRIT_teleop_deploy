@@ -1,0 +1,99 @@
+# H2 native bridge: unitree_hg DDS LowCmd/LowState <-> UDP policy runtime.
+# Generated from config/h2.json; scripts/check_package.py verifies both stay in sync.
+lowcmd_topic: "rt/lowcmd"
+lowstate_topic: "rt/lowstate"
+
+udp:
+  state_host: "127.0.0.1"
+  state_port: 55101
+  cmd_bind_host: "0.0.0.0"
+  cmd_port: 55102
+  recvbuf_bytes: 1048576
+  sndbuf_bytes: 1048576
+
+freq:
+  physical_hz: 1000.0
+  state_decimation: 20          # 50 Hz state to the policy, matching control_dt 0.02 s
+  state_publish_mode: "timer"
+
+low_level:
+  mode_pr: 0                    # PR ankle mode: ankle pitch/roll joint targets (verify on H2)
+  damping_kd: 8.0
+  command_timeout_s: 0.2        # stale policy stream -> continuous damping
+  damping_publish_hz: 50.0
+  shutdown_damping_duration_s: 0.5
+  wait_lowstate_timeout_s: 0.0
+  release_motion_service: true
+  release_required: true
+  release_max_attempts: 5
+  release_sleep_s: 1.0
+
+# Policy joint order (config/h2.json joint_names), as sent by the Python runtime.
+policy_joint_names: [
+  "left_hip_pitch_joint",
+  "left_hip_roll_joint",
+  "left_hip_yaw_joint",
+  "left_knee_joint",
+  "left_ankle_roll_joint",
+  "left_ankle_pitch_joint",
+  "right_hip_pitch_joint",
+  "right_hip_roll_joint",
+  "right_hip_yaw_joint",
+  "right_knee_joint",
+  "right_ankle_roll_joint",
+  "right_ankle_pitch_joint",
+  "waist_yaw_joint",
+  "waist_roll_joint",
+  "waist_pitch_joint",
+  "head_pitch_joint",
+  "head_yaw_joint",
+  "left_shoulder_pitch_joint",
+  "left_shoulder_roll_joint",
+  "left_shoulder_yaw_joint",
+  "left_elbow_joint",
+  "left_wrist_roll_joint",
+  "left_wrist_pitch_joint",
+  "left_wrist_yaw_joint",
+  "right_shoulder_pitch_joint",
+  "right_shoulder_roll_joint",
+  "right_shoulder_yaw_joint",
+  "right_elbow_joint",
+  "right_wrist_roll_joint",
+  "right_wrist_pitch_joint",
+  "right_wrist_yaw_joint"
+]
+
+# H2 DDS motor order: index i is LowCmd.motor_cmd[i] / LowState.motor_state[i].
+real_joint_names: [
+  "left_hip_pitch_joint",
+  "left_hip_roll_joint",
+  "left_hip_yaw_joint",
+  "left_knee_joint",
+  "left_ankle_roll_joint",
+  "left_ankle_pitch_joint",
+  "right_hip_pitch_joint",
+  "right_hip_roll_joint",
+  "right_hip_yaw_joint",
+  "right_knee_joint",
+  "right_ankle_roll_joint",
+  "right_ankle_pitch_joint",
+  "waist_yaw_joint",
+  "waist_roll_joint",
+  "waist_pitch_joint",
+  "left_shoulder_pitch_joint",
+  "left_shoulder_roll_joint",
+  "left_shoulder_yaw_joint",
+  "left_elbow_joint",
+  "left_wrist_roll_joint",
+  "left_wrist_pitch_joint",
+  "left_wrist_yaw_joint",
+  "right_shoulder_pitch_joint",
+  "right_shoulder_roll_joint",
+  "right_shoulder_yaw_joint",
+  "right_elbow_joint",
+  "right_wrist_roll_joint",
+  "right_wrist_pitch_joint",
+  "right_wrist_yaw_joint",
+  "head_pitch_joint",
+  "head_yaw_joint"
+]
