@@ -1,0 +1,364 @@
+{
+  "policy_sha256": "dea5b5f8122f5e330a24eee75ae0ce697d1b5237fe03c7707bd9fe78a924069a",
+  "mujoco_version": "3.12.0",
+  "clips": 39,
+  "pico_tempo": 1.3,
+  "attacks": 17,
+  "defences": 5,
+  "source_manifest_sha256": "c31276538a474494fa03a3046ef9d05bde52c313b982e960beebdd5b4e8f021e",
+  "files": {
+    "assets/contract-fixtures.json": {
+      "bytes": 58491,
+      "sha256": "16d4c2ca839d4fb3bdaed423244024f4c0fa934cbf6ba633d20ae24d412cc677"
+    },
+    "assets/scene.json.gz": {
+      "bytes": 3272758,
+      "sha256": "d3971ab92f5b744ab1e31503b6a2008434cb665ecdef2f13e9693fb362ca621b"
+    },
+    "assets/arena.mjb.gz": {
+      "bytes": 37973941,
+      "sha256": "03c4c12ae6c6564d9992e91a6da5c37495121ec864d0ceb16a10487dfca5ada3"
+    },
+    "assets/config.json": {
+      "bytes": 9970,
+      "sha256": "d535e5a7c7c0f458ba7f756cbb0176178c7b7d80c9c00b9aa9989b6b2e327494"
+    },
+    "assets/motions.json.gz": {
+      "bytes": 1179618,
+      "sha256": "0f41477ec4336065da3e0bb0eb33d83f7e5700cfcfc67a3e59f80d2dd9b14720"
+    },
+    "assets/scene-lite.json.gz": {
+      "bytes": 589191,
+      "sha256": "07c7f63ad0c12dcea156e748c8e22b4bbe53f8b3826d146928339aa304e6ecb7"
+    },
+    "assets/showcase.mjb.gz": {
+      "bytes": 37966259,
+      "sha256": "b3cf04c9388565d0e01d6978575dbc842e2e6163c9c61aee776888c6c738bb53"
+    },
+    "assets/showcase-scene-lite.json.gz": {
+      "bytes": 587429,
+      "sha256": "147b87a40fba21eb69e93daf6ae6b59073da08b82e57e5cb731a57bea4c7e04c"
+    },
+    "assets/showcase-config.json": {
+      "bytes": 3917,
+      "sha256": "311cfc5cc9b4e1e9fe62bab163a1aa485ad50c87e43d656af328aeb372f7660d"
+    },
+    "assets/showcase-scene.json.gz": {
+      "bytes": 3272295,
+      "sha256": "d4a06829723d8e2f9c532d4d8b413099350c8c4fffd9d792ba2ec21a9767011d"
+    },
+    "assets/policy-contract.json": {
+      "bytes": 1207,
+      "sha256": "698105e2c733d4b159895e485e0ca0ee7ac19db024c02148728054fa4c22768d"
+    },
+    "assets/policy.onnx": {
+      "bytes": 9415976,
+      "sha256": "dea5b5f8122f5e330a24eee75ae0ce697d1b5237fe03c7707bd9fe78a924069a"
+    }
+  },
+  "disabled_defences": [
+    "pico_guard_low",
+    "pico_guard_low_2"
+  ],
+  "punch_curation": {
+    "groups": [
+      {
+        "label": "直拳",
+        "keep": [
+          "pico_jab_left_3",
+          "pico_straight_right_2"
+        ],
+        "members": [
+          "jab",
+          "cross",
+          "body_jab",
+          "body_cross",
+          "left_flicker_jab",
+          "right_flicker_straight",
+          "lunging_jab",
+          "pico_jab_left_1",
+          "pico_jab_left_2",
+          "pico_jab_left_3",
+          "pico_straight_right_1",
+          "pico_straight_right_2"
+        ]
+      },
+      {
+        "label": "摆拳",
+        "keep": [
+          "pico_swing_left_1",
+          "pico_swing_right_1"
+        ],
+        "members": [
+          "hook",
+          "right_hook",
+          "left_body_hook",
+          "right_body_hook",
+          "left_long_hook",
+          "right_long_hook",
+          "left_short_hook",
+          "right_short_hook",
+          "pico_swing_left_1",
+          "pico_swing_left_2",
+          "pico_swing_right_1",
+          "pico_swing_right_2"
+        ]
+      },
+      {
+        "label": "上勾拳",
+        "keep": [
+          "pico_uppercut_left",
+          "pico_uppercut_right"
+        ],
+        "members": [
+          "left_uppercut",
+          "right_uppercut",
+          "left_body_uppercut",
+          "right_body_uppercut",
+          "pico_uppercut_left",
+          "pico_uppercut_right",
+          "pico_hook_forward"
+        ]
+      },
+      {
+        "label": "下潜勾拳",
+        "keep": [
+          "pico_duck_hook"
+        ],
+        "members": [
+          "pico_duck_hook"
+        ]
+      },
+      {
+        "label": "组合拳",
+        "keep": [
+          "rapid_boxing1",
+          "pico_uppercut_combo_2"
+        ],
+        "members": [
+          "rapid_boxing1",
+          "rapid_boxing2",
+          "rapid_boxing3",
+          "pico_one_two",
+          "pico_straight_combo",
+          "pico_alternating_combo",
+          "pico_uppercut_combo_1",
+          "pico_uppercut_combo_2"
+        ]
+      },
+      {
+        "label": "越肩拳",
+        "keep": [],
+        "members": [
+          "overhand",
+          "left_overhand"
+        ]
+      },
+      {
+        "label": "斜上勾拳",
+        "keep": [],
+        "members": [
+          "shovel_hook",
+          "right_shovel_hook"
+        ]
+      },
+      {
+        "label": "反手鞭拳",
+        "keep": [],
+        "members": [
+          "backfist",
+          "left_backfist"
+        ]
+      },
+      {
+        "label": "下砸与劈拳",
+        "keep": [],
+        "members": [
+          "hammerfist",
+          "left_hammerfist",
+          "left_chopping_punch",
+          "right_chopping_punch"
+        ]
+      },
+      {
+        "label": "推击",
+        "keep": [
+          "left_single_push"
+        ],
+        "members": [
+          "double_palm_push",
+          "left_single_push",
+          "right_single_push"
+        ]
+      },
+      {
+        "label": "格挡反击",
+        "keep": [
+          "pico_guard_counter"
+        ],
+        "members": [
+          "pico_guard_counter"
+        ]
+      }
+    ],
+    "original_count": 54,
+    "selected_count": 11,
+    "excluded": [
+      "backfist",
+      "body_cross",
+      "body_jab",
+      "cross",
+      "double_palm_push",
+      "hammerfist",
+      "hook",
+      "jab",
+      "left_backfist",
+      "left_body_hook",
+      "left_body_uppercut",
+      "left_chopping_punch",
+      "left_flicker_jab",
+      "left_hammerfist",
+      "left_long_hook",
+      "left_overhand",
+      "left_short_hook",
+      "left_uppercut",
+      "lunging_jab",
+      "overhand",
+      "pico_alternating_combo",
+      "pico_hook_forward",
+      "pico_jab_left_1",
+      "pico_jab_left_2",
+      "pico_one_two",
+      "pico_straight_combo",
+      "pico_straight_right_1",
+      "pico_swing_left_2",
+      "pico_swing_right_2",
+      "pico_uppercut_combo_1",
+      "rapid_boxing2",
+      "rapid_boxing3",
+      "right_body_hook",
+      "right_body_uppercut",
+      "right_chopping_punch",
+      "right_flicker_straight",
+      "right_hook",
+      "right_long_hook",
+      "right_short_hook",
+      "right_shovel_hook",
+      "right_single_push",
+      "right_uppercut",
+      "shovel_hook"
+    ],
+    "basis": "Repeated takes and shared parent trajectories; keep at most two representatives per related family."
+  },
+  "kick_curation": {
+    "groups": [
+      {
+        "label": "横踢",
+        "keep": [
+          "left_round_kick",
+          "right_round_kick"
+        ],
+        "members": [
+          "left_round_kick",
+          "right_round_kick",
+          "left_low_round_kick",
+          "low_round_kick"
+        ]
+      },
+      {
+        "label": "侧踢",
+        "keep": [],
+        "members": [
+          "side_kick",
+          "right_side_kick"
+        ]
+      },
+      {
+        "label": "蹬踢",
+        "keep": [],
+        "members": [
+          "left_push_kick",
+          "right_push_kick",
+          "left_oblique_kick",
+          "right_oblique_kick"
+        ]
+      },
+      {
+        "label": "扫踢",
+        "keep": [],
+        "members": [
+          "left_low_sweep",
+          "right_low_sweep"
+        ]
+      },
+      {
+        "label": "膝顶",
+        "keep": [],
+        "members": [
+          "left_knee",
+          "right_knee",
+          "left_diagonal_knee",
+          "right_diagonal_knee"
+        ]
+      },
+      {
+        "label": "正踢",
+        "keep": [
+          "left_front_kick",
+          "right_front_kick",
+          "left_high_front_kick",
+          "right_high_front_kick"
+        ],
+        "members": [
+          "left_front_kick",
+          "right_front_kick",
+          "left_high_front_kick",
+          "right_high_front_kick"
+        ]
+      },
+      {
+        "label": "转身后踢",
+        "keep": [],
+        "members": [
+          "back_kick"
+        ]
+      },
+      {
+        "label": "腾空旋转踢",
+        "keep": [],
+        "members": [
+          "spinning_kick"
+        ]
+      },
+      {
+        "label": "飞踢",
+        "keep": [
+          "left_flying_kick"
+        ],
+        "members": [
+          "left_flying_kick"
+        ]
+      }
+    ],
+    "selected_count": 7,
+    "excluded": [
+      "back_kick",
+      "left_diagonal_knee",
+      "left_knee",
+      "left_low_round_kick",
+      "left_low_sweep",
+      "left_oblique_kick",
+      "left_push_kick",
+      "low_round_kick",
+      "right_diagonal_knee",
+      "right_knee",
+      "right_low_sweep",
+      "right_oblique_kick",
+      "right_push_kick",
+      "right_side_kick",
+      "side_kick",
+      "spinning_kick"
+    ]
+  },
+  "showcase_clips": 37
+}

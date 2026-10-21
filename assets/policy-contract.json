@@ -1,0 +1,65 @@
+{
+  "policy_sha256": "dea5b5f8122f5e330a24eee75ae0ce697d1b5237fe03c7707bd9fe78a924069a",
+  "inputs": {
+    "reference_context": {
+      "shape": [
+        "batch",
+        9,
+        70
+      ],
+      "model_fps": 30.0,
+      "model_frame_offsets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "motion_frame_offsets_at_50hz": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        8,
+        10,
+        12,
+        13
+      ],
+      "frame_layout": [
+        "joint_pos[29]",
+        "joint_vel[29]",
+        "root_rotation_6d[6]",
+        "root_linear_velocity_body[3]",
+        "root_angular_velocity_body[3]"
+      ]
+    },
+    "proprio_history": {
+      "shape": [
+        "batch",
+        990
+      ],
+      "layout": "term-major, each term oldest-to-newest",
+      "terms": [
+        "base_angular_velocity[10,3]",
+        "projected_gravity[10,3]",
+        "reference_root_orientation_body[10,6]",
+        "joint_position_offset[10,29]",
+        "joint_velocity[10,29]",
+        "previous_action[10,29]"
+      ]
+    }
+  },
+  "output": {
+    "actions": {
+      "shape": [
+        "batch",
+        29
+      ]
+    }
+  }
+}

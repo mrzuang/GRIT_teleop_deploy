@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GRIT Arena | Interactive MuJoCo Demo</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+  <script type="module" src="./arena.js?v=rear-damping-v1"></script>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="mark">G1</span><div><h1 id="title">GRIT <span>vs</span> GRIT</h1><p>MuJoCo Interactive Demo</p></div></div>
+  <div class="toolbar"><a class="project-link github-link" href="https://github.com/mrzuang/GRIT_teleop_deploy" target="_blank" rel="noopener" aria-label="打开 GitHub 项目 GRIT_teleop_deploy"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5 18.3 5.3 18.3 5.3c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z"/></svg><span>GitHub 项目</span><span aria-hidden="true">↗</span></a><span id="connection" class="connection">正在连接</span><button id="manual" class="mode-button" aria-pressed="false" disabled>手动对打 <kbd>C</kbd></button><button id="mode" class="mode-button" aria-pressed="true" disabled>AI 对打 <kbd>P</kbd></button><button id="showcase" class="mode-button" aria-pressed="false" disabled>动作展示 <kbd>V</kbd></button><button id="help" aria-controls="controls-panel" aria-expanded="true">按键说明</button><button id="quality" title="切换自动、流畅、高清画质">画质 自动</button><button id="sound" aria-label="切换音效">音效 开 <kbd>M</kbd></button><button id="restart" title="R / Backspace">Reset <kbd>R</kbd></button><button id="start" class="primary" disabled>开始对战 <kbd>Enter</kbd></button></div>
+</header>
+<main id="arena">
+  <div id="site-stats" class="site-stats" aria-label="全站统计" title="全站匿名统计，自2026年10月14日上线起累计；浏览量按页面打开计数，比赛仅在完赛时计数。">
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>浏览量 <strong id="site-views">—</strong></span>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v5a4 4 0 0 1-8 0V3Zm0 2H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 1v6m-5 3h10m-8-3h6v3"/></svg>累计比赛 <strong id="site-matches">—</strong><small>场</small></span>
+  </div>
+  <canvas id="canvas" tabindex="0" aria-label="G1 格斗三维场景"></canvas>
+  <section id="scoreboard" class="scoreboard" aria-label="比分板">
+    <div id="red-panel" class="score red"><div><span id="red-label">红方 · AI</span><small id="red-controller">GRIT</small></div><strong id="red-score">0</strong><em id="red-hit"></em></div>
+    <div class="clock"><small id="round">ROUND 01</small><strong id="timer">01:00</strong><span id="status">准备中</span></div>
+    <div id="blue-panel" class="score blue"><strong id="blue-score">0</strong><div><span>蓝方 · AI</span><small id="blue-label">GRIT</small></div><em id="blue-hit"></em></div>
+  </section>
+  <section id="showcase-panel" class="showcase-panel" hidden>
+    <div class="showcase-title"><span>动作展示</span><strong id="showcase-name">准备中</strong><small id="showcase-counter">0 / 0</small></div>
+    <progress id="showcase-progress" max="1" value="0"></progress>
+    <div class="showcase-controls"><button id="previous-action" title="方向左键">← 上一个</button><select id="action-select" aria-label="选择展示动作"></select><button id="next-action" title="方向右键">下一个 →</button></div>
+    <p id="showcase-note">每段动作结束后回到舞台中央，自动播放下一段。</p>
+  </section>
+  <div class="camera-tools"><button id="third-person" class="selected" aria-pressed="true" title="镜头滞后平滑移动，缓慢跟到红方背后">第三人称视角</button><button id="follow" aria-pressed="false" title="镜头保持在两个机器人连线的侧面">跟随视角</button><button id="highlights" title="慢动作回看命中和击倒片段 · T" disabled>Highlights <kbd>T</kbd></button><button id="reposition" disabled title="保留比分和比赛计时">重置站位 <kbd>Space</kbd></button></div>
+  <section id="replay-panel" class="replay-panel" hidden aria-label="精彩慢动作回放"><strong>HIGHLIGHTS</strong><span id="replay-caption">慢动作回放</span><div><button id="replay-pause">暂停回放</button><select id="replay-speed" aria-label="回放速度"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1">1×</option></select><button id="replay-close">返回比赛</button></div><progress id="replay-progress" max="1" value="0"></progress></section>
+  <div id="loading" class="loading"><div class="spinner"></div><strong id="loading-title">正在准备拳台</strong><p id="loading-detail">首次打开需加载机器人与策略模型</p></div>
+  <section id="result" class="result" hidden aria-live="polite"><span id="result-reason"></span><h2 id="winner"></h2><p id="final-score"></p><button id="again" class="primary">再来一局 <kbd>R</kbd></button></section>
+  <div class="readout"><div><span class="dot red-dot"></span><b id="red-action-label">红方动作</b><span id="red-action">待命</span></div><div id="blue-action-row"><span class="dot blue-dot"></span><b>蓝方动作</b><span id="blue-action">待命</span></div><small id="performance">滚轮 / 双指缩放</small></div>
+  <div id="hit-banner" class="hit-banner" hidden aria-live="polite"></div>
+  <div id="hint" class="hint">C 手动对打 · P AI 对打 · V 动作展示</div>
+</main>
+<footer id="controls-panel" aria-label="按键说明">
+  <div class="help-heading"><h2>按键说明</h2><button id="close-help" aria-label="收起按键说明">收起</button></div>
+  <p id="mode-note" class="mode-note">C 手动控制红方、蓝方自动应战；P 观看 AI 对打；V 单机器人展示。AI 选招：格挡20%、踢腿40%、出拳40%。</p>
+  <section id="manual-keys" class="manual-keys" aria-label="红方手动控制按键">
+    <h3>红方手动控制 <span>按 C 接管</span></h3>
+    <div><span><kbd>W</kbd> / <kbd>S</kbd> 前进 / 后退</span><span><kbd>A</kbd> / <kbd>D</kbd> 左移 / 右移</span><span><kbd>Q</kbd> / <kbd>E</kbd> 左转 / 右转</span><span><kbd>F</kbd> 重新面朝对手</span><span><kbd>J</kbd> 轻击</span><span><kbd>K</kbd> 重击</span><span><kbd>L</kbd> 快速组合拳</span><span><kbd>H</kbd> 按住格挡</span><span><kbd>U</kbd> 踢腿</span><span><kbd>I</kbd> 飞踢</span><span><kbd>O</kbd> 拳腿组合</span><span><kbd>Y</kbd> 挑衅 · <kbd>B</kbd> 热身</span></div>
+  </section>
+  <div class="session-keys"><span><kbd>C</kbd> 手动对打</span><span><kbd>P</kbd> AI 对打</span><span><kbd>V</kbd> 动作展示</span><span><kbd>Enter</kbd> 暂停 / 继续</span><span><kbd>Space</kbd> 重置站位</span><span><kbd>←</kbd> / <kbd>→</kbd> 切换展示动作</span><span><kbd>R</kbd> / <kbd>⌫</kbd> 重开</span><span><kbd>M</kbd> 音效开关</span><span><kbd>T</kbd> 精彩慢动作回放</span><span><kbd>?</kbd> 展开 / 收起说明</span></div>
+  <p class="mouse-help">滚轮 / 双指缩放 · 按钮切换视角</p>
+  <p class="rules">双方均使用 GRIT。第三人称平滑跟到红方背后，跟随视角从侧面观看双方。<br>对打：头 / 躯干 / 大腿命中 +1，倒地立即判负，满一分钟比分决胜。<br>Space 回到开场站位，保留比分和计时；展示时重新播放当前动作。</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "files": {
+    "assets/arena.mjb.gz": {
+      "bytes": 37973941,
+      "sha256": "03c4c12ae6c6564d9992e91a6da5c37495121ec864d0ceb16a10487dfca5ada3",
+      "type": "application/gzip"
+    },
+    "assets/showcase.mjb.gz": {
+      "bytes": 37966259,
+      "sha256": "b3cf04c9388565d0e01d6978575dbc842e2e6163c9c61aee776888c6c738bb53",
+      "type": "application/gzip"
+    },
+    "assets/motions.json.gz": {
+      "bytes": 1179618,
+      "sha256": "0f41477ec4336065da3e0bb0eb33d83f7e5700cfcfc67a3e59f80d2dd9b14720",
+      "type": "application/gzip"
+    },
+    "assets/scene.json.gz": {
+      "bytes": 3272758,
+      "sha256": "d3971ab92f5b744ab1e31503b6a2008434cb665ecdef2f13e9693fb362ca621b",
+      "type": "application/gzip"
+    },
+    "assets/scene-lite.json.gz": {
+      "bytes": 589191,
+      "sha256": "07c7f63ad0c12dcea156e748c8e22b4bbe53f8b3826d146928339aa304e6ecb7",
+      "type": "application/gzip"
+    },
+    "assets/showcase-scene.json.gz": {
+      "bytes": 3272295,
+      "sha256": "d4a06829723d8e2f9c532d4d8b413099350c8c4fffd9d792ba2ec21a9767011d",
+      "type": "application/gzip"
+    },
+    "assets/showcase-scene-lite.json.gz": {
+      "bytes": 587429,
+      "sha256": "147b87a40fba21eb69e93daf6ae6b59073da08b82e57e5cb731a57bea4c7e04c",
+      "type": "application/gzip"
+    },
+    "assets/policy.onnx": {
+      "bytes": 9415976,
+      "sha256": "dea5b5f8122f5e330a24eee75ae0ce697d1b5237fe03c7707bd9fe78a924069a",
+      "type": "application/octet-stream"
+    },
+    "vendor/mujoco.wasm": {
+      "bytes": 10125422,
+      "sha256": "70f991e34b22674611d0cba181a9afb7b66914557c0817d5b5b0f7de10e6d548",
+      "type": "application/wasm"
+    },
+    "vendor/ort-wasm-simd-threaded.wasm": {
+      "bytes": 11210254,
+      "sha256": "71aef04959c5c1b6de461b6538e2058e306610034a85aad2742d0c7fd4533fe4",
+      "type": "application/wasm"
+    }
+  }
+}

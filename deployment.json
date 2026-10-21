@@ -1,0 +1,331 @@
+{
+  "repository": "mrzuang/GRIT_teleop_deploy",
+  "source_branch": "gh-pages",
+  "policy_sha256": "dea5b5f8122f5e330a24eee75ae0ce697d1b5237fe03c7707bd9fe78a924069a",
+  "modes": [
+    "manual",
+    "ai",
+    "showcase"
+  ],
+  "showcase_actions": 37,
+  "warmup_before_approach": true,
+  "attack_probabilities": {
+    "guard": 0.2,
+    "leg": 0.4,
+    "punch": 0.4
+  },
+  "files": {
+    ".nojekyll": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "arena.js": {
+      "bytes": 29312,
+      "sha256": "d67bb59c3d192dd5392b206b67fc4e602354adf4dbf9a63c06d72b04e58653f5"
+    },
+    "asset-cache.js": {
+      "bytes": 3150,
+      "sha256": "bed7c7f375e27ab5936ccdc4d492dba05b35050e9499e603efa7a58a39a9692c"
+    },
+    "assets/arena.mjb.gz": {
+      "bytes": 37973941,
+      "sha256": "03c4c12ae6c6564d9992e91a6da5c37495121ec864d0ceb16a10487dfca5ada3"
+    },
+    "assets/config.json": {
+      "bytes": 9970,
+      "sha256": "d535e5a7c7c0f458ba7f756cbb0176178c7b7d80c9c00b9aa9989b6b2e327494"
+    },
+    "assets/contract-fixtures.json": {
+      "bytes": 58491,
+      "sha256": "16d4c2ca839d4fb3bdaed423244024f4c0fa934cbf6ba633d20ae24d412cc677"
+    },
+    "assets/motions.json.gz": {
+      "bytes": 1179618,
+      "sha256": "0f41477ec4336065da3e0bb0eb33d83f7e5700cfcfc67a3e59f80d2dd9b14720"
+    },
+    "assets/policy-contract.json": {
+      "bytes": 1207,
+      "sha256": "698105e2c733d4b159895e485e0ca0ee7ac19db024c02148728054fa4c22768d"
+    },
+    "assets/policy.onnx": {
+      "bytes": 9415976,
+      "sha256": "dea5b5f8122f5e330a24eee75ae0ce697d1b5237fe03c7707bd9fe78a924069a"
+    },
+    "assets/scene-lite.json.gz": {
+      "bytes": 589191,
+      "sha256": "07c7f63ad0c12dcea156e748c8e22b4bbe53f8b3826d146928339aa304e6ecb7"
+    },
+    "assets/scene.json.gz": {
+      "bytes": 3272758,
+      "sha256": "d3971ab92f5b744ab1e31503b6a2008434cb665ecdef2f13e9693fb362ca621b"
+    },
+    "assets/showcase-config.json": {
+      "bytes": 3917,
+      "sha256": "311cfc5cc9b4e1e9fe62bab163a1aa485ad50c87e43d656af328aeb372f7660d"
+    },
+    "assets/showcase-scene-lite.json.gz": {
+      "bytes": 587429,
+      "sha256": "147b87a40fba21eb69e93daf6ae6b59073da08b82e57e5cb731a57bea4c7e04c"
+    },
+    "assets/showcase-scene.json.gz": {
+      "bytes": 3272295,
+      "sha256": "d4a06829723d8e2f9c532d4d8b413099350c8c4fffd9d792ba2ec21a9767011d"
+    },
+    "assets/showcase.mjb.gz": {
+      "bytes": 37966259,
+      "sha256": "b3cf04c9388565d0e01d6978575dbc842e2e6163c9c61aee776888c6c738bb53"
+    },
+    "build-manifest.json": {
+      "bytes": 8740,
+      "sha256": "7bb4ad8310e205399c7436a6e527adca29cd78bcad2257ff32c8d37908b7dc68"
+    },
+    "camera.js": {
+      "bytes": 4865,
+      "sha256": "fa6d38c17b588db93e4928e4eb04da94936ea89f0f0591fae37824da8dfab283"
+    },
+    "credits.html": {
+      "bytes": 2974,
+      "sha256": "ecf795feecfad9a99ddbb483b6cd67eb1d2aa11eed4092345cfa7d5abe6ffc14"
+    },
+    "demo.html": {
+      "bytes": 7996,
+      "sha256": "fd3c6a1e502b2e8f2f6ac36c07581d137eb7d01a451c1f74b136203f54bf2d1c"
+    },
+    "grit.js": {
+      "bytes": 5046,
+      "sha256": "f0af1d51afade7b76f35e66353226d0138cefd5af00594d435efd7849870f85e"
+    },
+    "index.html": {
+      "bytes": 7996,
+      "sha256": "fd3c6a1e502b2e8f2f6ac36c07581d137eb7d01a451c1f74b136203f54bf2d1c"
+    },
+    "loading-assets.json": {
+      "bytes": 1867,
+      "sha256": "b55776e60a9d871f4f93f796c0e333889c11f9039ae96b0f83c2ad3a897db84f"
+    },
+    "math.js": {
+      "bytes": 2333,
+      "sha256": "cea0925b84aaf55a25d2928fd60c63581c62aeba1d6cf28a8b10fc759593d76d"
+    },
+    "model-loader.js": {
+      "bytes": 455,
+      "sha256": "e5a4fed96aebc5c9a0ac597b636a4d1b47369f44725dbfd88bf9839271ab8b6b"
+    },
+    "physics.js": {
+      "bytes": 20754,
+      "sha256": "805e31c57c5ad95b52396904df708d6c05f760a3d6feda35cae22f5b4b18643c"
+    },
+    "planner.js": {
+      "bytes": 18098,
+      "sha256": "06eef192781a82235e08dc2bcd5a838894dc76b4143b2933262d800461277986"
+    },
+    "replay.js": {
+      "bytes": 4293,
+      "sha256": "04339bd1d46632f52f2282710fed74379efec49e25e01923cf7075624a73780f"
+    },
+    "rules.js": {
+      "bytes": 524,
+      "sha256": "b19b18af204075f029aa9185b8fb4ed0dd4482ee729fc9b1f451c77917144ec0"
+    },
+    "serve.json": {
+      "bytes": 139,
+      "sha256": "7f5249ca011cbd09d6da346ebf2f54a226aee44d66d86e58a73b7a56796815e6"
+    },
+    "showcase.js": {
+      "bytes": 5399,
+      "sha256": "9461e372759e6900f540e5dd13d700a88c8c6d7c22ecab470f367112bebc99f0"
+    },
+    "sound/block.wav": {
+      "bytes": 6656,
+      "sha256": "6bd53e838d8c8b36214e8abbfd4e3de2f0e442694306d0e9a3255646301f17f6"
+    },
+    "sound/down.wav": {
+      "bytes": 35324,
+      "sha256": "93c858533cbac836e9b1cd736a6aee8e5e2c4a66e8c75bf01d1f44e9de1f0621"
+    },
+    "sound/draw.wav": {
+      "bytes": 57372,
+      "sha256": "106e223e0a011f16f917a755fd8d7b9c3a870d9cfa7689298654acc3dd85008d"
+    },
+    "sound/hit.wav": {
+      "bytes": 13272,
+      "sha256": "16f95c20cd5e46eb2ee4786af0cb51aca49cefee8ebe2b386d5da07e337fa460"
+    },
+    "sound/lose.wav": {
+      "bytes": 75012,
+      "sha256": "06740a4b476c384c0a98ac7b1aff1fc0a97885210ab990d9d87808b43e3be7f1"
+    },
+    "sound/point.wav": {
+      "bytes": 15920,
+      "sha256": "02d3275aaa8fd9369dd37cc3f97da897d5aa1784a7e9c1a814ae60493b9a2df6"
+    },
+    "sound/start.wav": {
+      "bytes": 57372,
+      "sha256": "4fdc6101d0360aa467e70db4d4618620dace1a65c57cfdd73b0f4d40ee838ddb"
+    },
+    "sound/tick.wav": {
+      "bytes": 5776,
+      "sha256": "63fa4628abfffb20745448762778b485312d6fbe743a2213e1f950ff5bc5df26"
+    },
+    "sound/win.wav": {
+      "bytes": 83832,
+      "sha256": "36aac00d956ffd9e36cd737f45b56f4b2f753cd3a1eaf86b395357e583df4194"
+    },
+    "stats.js": {
+      "bytes": 2823,
+      "sha256": "53f87c0fc64e1b938ce3ad70f09dcfaca8f2a3a2f6f05f2791b4e460e8bca3df"
+    },
+    "style.css": {
+      "bytes": 22906,
+      "sha256": "1181e0d11d376ed66056ddb66cf65c8ed9d3c69fed17bc09a205b024bc2b3960"
+    },
+    "vendor/MUJOCO-LICENSE.txt": {
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "vendor/ONNXRUNTIME-LICENSE.txt": {
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    "vendor/OrbitControls.js": {
+      "bytes": 38703,
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c"
+    },
+    "vendor/THREE-LICENSE.txt": {
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    "vendor/mujoco.js": {
+      "bytes": 293092,
+      "sha256": "214dd7ead76aecd6e9b6525b2b83eca88e9ed3b893231361b4f1e2716a123a0a"
+    },
+    "vendor/mujoco.wasm": {
+      "bytes": 10125422,
+      "sha256": "70f991e34b22674611d0cba181a9afb7b66914557c0817d5b5b0f7de10e6d548"
+    },
+    "vendor/ort-wasm-simd-threaded.mjs": {
+      "bytes": 20856,
+      "sha256": "30dd851d9c00622940500f71ddd2ff8820c5cb65270816080175b958705385a8"
+    },
+    "vendor/ort-wasm-simd-threaded.wasm": {
+      "bytes": 11210254,
+      "sha256": "71aef04959c5c1b6de461b6538e2058e306610034a85aad2742d0c7fd4533fe4"
+    },
+    "vendor/ort.wasm.min.mjs": {
+      "bytes": 48259,
+      "sha256": "6ef726f355b791129f7ddf3f62e7877a16b9b777abe87004b8ab306e6b9cf265"
+    },
+    "vendor/three.core.min.js": {
+      "bytes": 381124,
+      "sha256": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de"
+    },
+    "vendor/three.module.min.js": {
+      "bytes": 338908,
+      "sha256": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6"
+    }
+  },
+  "kick_aim": {
+    "source": "calibrated G1 foot reference direction",
+    "preparation": "face and space before starting the kick",
+    "motion_correction": "bounded early heading update, original strike and landing coordination"
+  },
+  "large_top_controls": true,
+  "prominent_github_link": true,
+  "manual_controls": {
+    "player": "red",
+    "opponent": "ai",
+    "shortcut": "C",
+    "guide": "bottom-right",
+    "movement": "WASD",
+    "turn": "QE",
+    "punch": "JKL",
+    "guard": "H",
+    "kick": "UIO",
+    "face": "F",
+    "taunt": "Y",
+    "warmup": "B",
+    "warmup_preserved": true,
+    "kick_landing_preserved": true
+  },
+  "removed_actions": [
+    "back_kick",
+    "spinning_kick"
+  ],
+  "keyboard_guide_font_px": {
+    "desktop": 14,
+    "mobile": 13,
+    "desktop_key": 13,
+    "mobile_key": 12
+  },
+  "controllers": [
+    "grit"
+  ],
+  "highlights": {
+    "source": "recorded physical poses and hit/KO events",
+    "speeds": [
+      0.25,
+      0.5,
+      1
+    ],
+    "shortcut": "T",
+    "freezes_physics_and_score": true
+  },
+  "statistics": {
+    "scope": "global",
+    "provider": "Abacus",
+    "started_at": "2026-10-14",
+    "namespace": "mrzuang-grit-teleop-deploy-arena-20261014",
+    "counters": [
+      "page-views",
+      "completed-matches"
+    ],
+    "counts_only_finished_rounds": true,
+    "no_user_forms": true,
+    "no_rankings": true
+  },
+  "camera_modes": {
+    "default": "third",
+    "third": "smoothed_behind_red_torso",
+    "follow": "perpendicular_to_fighter_line"
+  },
+  "camera_button_fonts_px": {
+    "desktop": 18,
+    "medium": 16,
+    "mobile": 15
+  },
+  "loading_optimization": {
+    "binary_model_loader": "MEMFS",
+    "parallel_startup": true,
+    "persistent_content_hash_cache": true,
+    "physics_assets_unchanged": true,
+    "local_browser_measurements": [
+      {
+        "load": "cold",
+        "seconds": 2.864697335055098,
+        "cache": {
+          "hits": 0,
+          "misses": 5,
+          "cache_bytes": 0,
+          "download_bytes": 69930535
+        }
+      },
+      {
+        "load": "cached",
+        "seconds": 2.017983297817409,
+        "cache": {
+          "hits": 5,
+          "misses": 0,
+          "cache_bytes": 69930535,
+          "download_bytes": 0
+        }
+      }
+    ]
+  },
+  "third_person_smoothing": {
+    "target_time_constant_s": 0.4,
+    "orbit_time_constant_s": 1.15,
+    "position_time_constant_s": 0.55,
+    "maximum_orbit_speed_deg_s": 45,
+    "smooth_transition_from_side": true
+  }
+}
